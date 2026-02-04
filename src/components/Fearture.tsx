@@ -82,7 +82,7 @@ export default function CardFlip({ title, subtitle, description, features, icon:
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes slideIn {
           0% { transform: translateX(-100%); opacity: 0; }
           50% { opacity: 0.3; }
