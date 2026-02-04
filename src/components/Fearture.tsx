@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { ArrowRight, Code2, Zap, type LucideIcon } from 'lucide-react';
+import { ArrowRight, Zap, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 
 export interface CardFlipProps {

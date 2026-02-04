@@ -1,5 +1,5 @@
 import CardFlip from './Fearture';
-import { Rocket, Shield, Brain, Zap, Database, Search, MessageSquare, Globe } from 'lucide-react';
+import { Shield,  Database, Search, MessageSquare } from 'lucide-react';
 
 const featureData = [
   {
