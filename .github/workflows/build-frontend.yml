@@ -31,6 +31,7 @@ jobs:
         with:
           context: . 
           push: true
+          no-cache: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/company-assistant-frontend:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/company-assistant-frontend:${{ github.sha }}
