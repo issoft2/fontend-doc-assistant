@@ -3,11 +3,8 @@
   "baseUrl": ".",
   "paths": {
     "@/*": ["src/*"]
-  },
-  "allowJs": true,
-  "checkJs": false,
-  "noImplicitAny": false
-
+  }
+  
  },
 
   "files": [],
