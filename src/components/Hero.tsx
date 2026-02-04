@@ -82,26 +82,26 @@ const Hero = ({title, subtitle}: HeroProps ) => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
         >
-          <div className="relative flex h-40 w-full overflow-hidden md:h-64">
-         
+          <div className="relative flex h-[400px] w-full items-center justify-center md:h-[500px]">
+            
             <motion.img
-                src={heroImage}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full object-cover w-96 h-96 opacity-80 -z-10"
-                animate={{
-                  y: [0, -15, 0],
-                  scale: [1, 1.03, 1],
-                  rotate: [0, 5, -5, 0],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  ease: "easeInOut",
-                }}
-              />
+              src={heroImage}
+              className="relative rounded-full object-cover w-72 h-72 md:w-96 md:h-96 opacity-90 shadow-2xl border border-white/10"
+              animate={{
+                y: [0, -20, 0],
+                scale: [1, 1.05, 1],
+                rotate: [0, 2, -2, 0],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                repeatType: "mirror", // 'mirror' makes the loop seamless and soft
+                ease: "easeInOut",
+              }}
+            />
 
+            <div className="absolute h-64 w-64 bg-[#9b87f5]/20 blur-[100px] -z-10" />
           </div>
-          
         </motion.div>
       </div>
     </section>
