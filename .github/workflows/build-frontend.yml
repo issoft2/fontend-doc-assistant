@@ -30,7 +30,7 @@ jobs:
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: . 
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/company-assistant-frontend:latest
