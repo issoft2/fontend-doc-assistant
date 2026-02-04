@@ -35,3 +35,10 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/company-assistant-frontend:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/company-assistant-frontend:${{ github.sha }}
+
+      - name: Trigger Deployment in Infra Repo
+        run: |
+          curl -X POST https://api.github.com/repos/${{ github.repository_owner }}/infra-assistant/dispatches \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: Bearer ${{ secrets.GHCR_PAT }}" \
+          -d '{"event_type": "deploy_trigger"}'         
