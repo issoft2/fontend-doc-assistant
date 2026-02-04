@@ -3,7 +3,12 @@ import { Link } from "react-router-dom";
 import { motion } from 'framer-motion';
 import heroImage from "../assets/images/download.webp";
 
-const Hero = ({title, subtitle}) => {
+interface HeroProps {
+  title: string;
+  subtitle: string
+}
+
+const Hero = ({title, subtitle}: HeroProps ) => {
   return (
     <section
       className="relative w-full overflow-hidden bg-[#0a0613] pt-32 pb-10 font-light text-white antialiased md:pt-20 md:pb-16"
@@ -45,7 +50,7 @@ const Hero = ({title, subtitle}) => {
 
           <div className="mb-10 flex flex-col items-center justify-center gap-4 sm:mb-0 sm:flex-row">
             <Link
-              prefetch={false}
+              prefetch={undefined}
               to="/docs/get-started"
               className="neumorphic-button hover:shadow-[0_0_20px_rgba(155, 135, 245, 0.5)] relative w-full overflow-hidden rounded-full border border-white/10 bg-gradient-to-b from-white/10 to-white/5 px-8 py-4 text-white shadow-lg transition-all duration-300 hover:border-[#9b87f5]/30 sm:w-auto"
             >
