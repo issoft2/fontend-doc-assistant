@@ -34,9 +34,9 @@ import {
 const menuItems = [
   { title: 'Dashboard', icon: LayoutDashboard, href: '#dashboard' },
   { title: 'Analytics', icon: BarChart3, href: '#analytics' },
-  { title: 'Users', icon: Users, href: '#users' },
-  { title: 'Content', icon: FileText, href: '#content' },
-  { title: 'Activity', icon: Activity, href: '#activity' },
+  { title: 'Users', _icon: Users, href: '#users' },
+  { title: 'Content', _icon: FileText, href: '#content' },
+  { title: 'Activity', _icon: Activity, href: '#activity' },
   { title: 'Database', icon: Database, href: '#database' },
   { title: 'Security', icon: Shield, href: '#security' },
   { title: 'Performance', icon: Zap, href: '#performance' },
@@ -73,7 +73,7 @@ export const AdminSidebar = memo(() => {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                const Icon = item.icon;
+                const _Icon = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild>
