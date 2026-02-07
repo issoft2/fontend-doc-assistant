@@ -5,7 +5,7 @@ export async function login(email: string, password: string) {
     body.append("username", email);
     body.append("password", password);
 
-    const res = await api.post("/login", body, {
+    const res = await api.post("/auth/login", body, {
         headers: {"Content-Type": "application/x-ww-form-urlencoded"},
     });
 
