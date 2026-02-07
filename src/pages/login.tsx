@@ -29,7 +29,6 @@ const  Login = () => {
   const [loading, setLoading] = useState(false);
   // const [tenants, setTenant] = useState<[] | null>(null);
 
-
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -51,6 +50,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       }catch (err: any) {
         setLoading(false);
         setError(err.message);
+        error
       }
       setLoading(false);
   };
