@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { login } from '../lib/api';
+
 import {
   Mail,
   Lock,
@@ -11,18 +14,46 @@ import {
   ShieldCheck,
   Github,
 } from 'lucide-react';
-export default function SignInPage() {
+
+type Tenant = {
+  tenant_id: number;
+  role: string;
+};
+
+export default function Login() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const handleSubmit = (e: React.FormEvent) => {
+  const [tenants, setTenant] = useState <[] | null>(null);
+
+
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      alert('Login successful! (This is a demo)');
+    setError("");
+      
+      try{
+        const data = await login(email, password);
+
+        // Phase2 
+        if (data.requires_tenant_selection) {
+          setTenant(data.tenant);
+          return;
+        }
+
+        // Phase 1: single-tenant
+        localStorage.setItem("token", data.access_token);
+        navigate("/")
+
+      }catch (err: any) {
+        setLoading(false);
+        setError(err.message);
+      }
       setLoading(false);
-    }, 2000);
   };
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden p-4">
