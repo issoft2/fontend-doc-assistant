@@ -2,7 +2,8 @@ import { api, setAuthToken } from "./api";
 
 export async function login(email: string, password: string) {
     const body = new URLSearchParams();
-    body.append("username", email);
+    const username = email
+    body.append("username", username);
     body.append("password", password);
 
     const res = await api.post("/auth/login", body, {
