@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { SidebarInset,  SidebarProvider } from '@/components/ui/sidebar';
-import { Users, DollarSign, Eye } from 'lucide-react';
+import { DollarSign, Eye } from 'lucide-react';
 import { DashboardCard } from '@/components/ui/dashboard-card';
 import { RevenueChart  } from '@/components/ui/revenue-chart';
 import { UsersTable } from '@/components/ui/users-table';
@@ -18,9 +18,8 @@ const stats = [
         value: '12,545',
         change: '+124%',
         changeType: 'positive' as const,
-        icon: Users,
         color: 'text-blue-500',
-        bgcolor: 'bg-blue-500/10',
+        bgColor: 'bg-blue-500/10',
     },
     {
         title: 'Revenue',
@@ -29,7 +28,7 @@ const stats = [
         changeType: 'positive' as const,
         icon: DollarSign,
         color: 'text-green-500',
-        bgcolor: 'bg-green-500/10',
+        bgColor: 'bg-green-500/10',
     },
     {
         title: 'Page Views',
@@ -38,7 +37,7 @@ const stats = [
         changeType: 'negative' as const,
         icon: Eye,
         color: 'text-orange-500',
-        bgcolor: 'bg-orange-500/10',
+        bgColor: 'bg-orange-500/10',
 
         },
 ];
