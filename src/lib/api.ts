@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { navigateToLogin } from "./navigation";
+// import { navigateToLogin } from "./navigation";
 
 export const api = axios.create({
     baseURL: "/api", // relative path; Nginx proxy

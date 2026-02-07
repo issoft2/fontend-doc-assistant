@@ -28,8 +28,7 @@ import {
   Bell,
   Settings,
   Moon,
-  Sun,
-  User,
+  Sun
 } from 'lucide-react';
 
 const menuItems = [
