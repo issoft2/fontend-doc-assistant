@@ -11,14 +11,13 @@ import {
   Palette,
   Users,
   Cloud,
-  ShieldCheck,
-  Github,
+  ShieldCheck
 } from 'lucide-react';
 
-type Tenant = {
-  tenant_id: number;
-  role: string;
-};
+// type Tenant = {
+//   tenant_id: number;
+//   role: string;
+// };
 
 const  Login = () => {
   const navigate = useNavigate();
@@ -26,9 +25,9 @@ const  Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [tenants, setTenant] = useState <[] | null>(null);
+  // const [tenants, setTenant] = useState<[] | null>(null);
 
 
 const handleSubmit = async (e: React.FormEvent) => {
@@ -41,7 +40,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
         // Phase2 
         if (data.requires_tenant_selection) {
-          setTenant(data.tenant);
+          // setTenant(data.tenant);
           return;
         }
 
