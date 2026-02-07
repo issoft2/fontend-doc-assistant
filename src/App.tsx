@@ -1,8 +1,12 @@
+import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import FeatureCards from "./components/FeatureCards";
-import { Routes, Route } from 'react-router-dom';
-import Login from "./components/login";
+import { Routes, Route, useNavigate} from 'react-router-dom';
+import Login from "./pages/login";
+import { setNavigator } from "./lib/navigation";
+
+
 
 
 const Home = () => (
@@ -19,6 +23,12 @@ const Home = () => (
   );
 
   const App = () => {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+      setNavigator(navigate);
+    }, [navigate]);
+
     return (
       <>
         <Navbar />

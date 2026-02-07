@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../lib/api';
+import { login } from '../lib/auth';
 
 import {
   Mail,
@@ -20,7 +20,7 @@ type Tenant = {
   role: string;
 };
 
-export default function Login() {
+const  Login = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -280,3 +280,4 @@ const handleSubmit = async (e: React.FormEvent) => {
   );
 }
 
+export default Login

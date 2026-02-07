@@ -1,23 +1,46 @@
-const API_BASE_URL  = import.meta.env.VITE_API_URL;
+import axios, { AxiosError } from "axios";
+import { navigateToLogin } from "./navigation";
 
-export async function login(email: string, password: string) {
-    const body = new URLSearchParams();
-    body.append("username", email);
-    body.append("password", password);
+export const api = axios.create({
+    baseURL: "/api", // relative path; Nginx proxy
+    withCredentials: false, // set to true if you move to HttpOnly cookies
+});
 
-    const res = await fetch(`${API_BASE_URL}/login`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body,
-    });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-        throw new Error(data.detail || "Login Failed");
+// -- Auth token helper ----
+export function setAuthToken(token: string | null) {
+    if (token) {
+        api.defaults.headers.common.Authorization = `Bearer ${token}`;
+        localStorage.setItem("access_token", token)
+    } else  {
+        delete api.defaults.headers.common.Authorization;
+        localStorage.removeItem("access_token");
     }
-    console.log(data);
-    return data
 }
+
+// Retore token on startup
+const saved = localStorage.getItem("access_token");
+if(saved){
+    api.defaults.headers.common.Authorization = `Bearer ${saved}`;
+}
+
+
+// ---- Global 402/403 interceptor ---
+api.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError) => {
+        const status = error.response?.status;
+        if(status === 401 || status == 403) {
+            setAuthToken(null);
+            // display message/banner to the user instead of taking the user back to login page
+        }
+        return Promise.reject(error);
+    }
+)
+
+// ---- Endpoint helper ---
+
+export function me() {
+    return api.get("/auth/me");
+}
+
