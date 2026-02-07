@@ -1,23 +1,21 @@
 {
   "compilerOptions": {
-    "target": "ESNext",                  // Modern JS output
-    "module": "ESNext",                  // Vite uses ESM
-    "lib": ["DOM", "ESNext"],            // DOM + modern JS
-    "jsx": "react-jsx",                  // React 17+ JSX transform
-    "strict": true,                      // Enable strict type checking
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "jsx": "react-jsx",
+    "strict": true,
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "baseUrl": ".",                       // For alias support
-    "paths": {
-      "@/*": ["src/*"]
-    },
-    "noUnusedLocals": true,               // Will now fail build if unused imports exist
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] },
+    "noUnusedLocals": true,
     "noUnusedParameters": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src"],                     // Include all source files
+  "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
