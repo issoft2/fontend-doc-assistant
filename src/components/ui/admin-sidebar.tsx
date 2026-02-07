@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import { useTheme } from 'next-themes';
-import Link from 'next/link';
+// import {Link} from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -54,7 +54,7 @@ export const AdminSidebar = memo(() => {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link prefetch={false} href="#dashboard">
+              {/* <Link prefetch={false} href="#dashboard">
                 <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <LayoutDashboard className="h-5 w-5" />
                 </div>
@@ -62,7 +62,7 @@ export const AdminSidebar = memo(() => {
                   <span className="truncate font-semibold">TechCorp</span>
                   <span className="truncate text-xs">Admin Panel</span>
                 </div>
-              </Link>
+              </Link> */}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -78,10 +78,10 @@ export const AdminSidebar = memo(() => {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild>
-                      <Link prefetch={false} href={item.href}>
+                      {/* <Link prefetch={false} href={item.href}>
                         <Icon />
                         <span>{item.title}</span>
-                      </Link>
+                      </Link> */}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -103,10 +103,10 @@ export const AdminSidebar = memo(() => {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link prefetch={false} href="#profile">
+              {/* <Link prefetch={false} href="#profile">
                 <User />
                 <span>Admin Profile</span>
-              </Link>
+              </Link> */}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
