@@ -73,7 +73,7 @@ export const AdminSidebar = memo(() => {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                const _Icon = item.icon;
+                item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild>
