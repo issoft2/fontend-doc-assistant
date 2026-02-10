@@ -7,3 +7,7 @@ export function setNavigator(fn: (path: string) => void) {
 export function navigateToLogin() {
     navigate?.("/login");
 }
+
+export function navigateToChartPage() {
+    navigate?.("/chat");
+}
