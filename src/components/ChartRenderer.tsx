@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useMemo } from 'react';
 import {
   Chart as ChartJS,
@@ -28,7 +26,7 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
-  Filler, // For area charts
+  Filler,
 );
 
 interface ChartDataRow {
@@ -52,15 +50,13 @@ interface ChartRendererProps {
 }
 
 const ChartRenderer: React.FC<ChartRendererProps> = ({ spec, className = '' }) => {
-  // Memoized labels computation
   const labels = useMemo(
     () => spec.data.map(row => String(row[spec.x_field] ?? '')),
     [spec.data, spec.x_field]
   );
 
-  // Memoized datasets computation
   const datasets = useMemo(() => {
-    const palette = ['#6366F1', '#22C55E', '#F97316']; // indigo, emerald, orange
+    const palette = ['#6366F1', '#22C55E', '#F97316'];
     
     return spec.y_fields.map((field, idx) => {
       const baseColor = palette[idx % palette.length];
@@ -79,13 +75,12 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({ spec, className = '' }) =
     });
   }, [spec.y_fields, spec.data, spec.chart_type]);
 
-  // Memoized chart data
   const chartData = useMemo(() => ({
     labels,
     datasets,
   }), [labels, datasets]);
 
-  // Memoized chart options
+  // ✅ FIXED - Chart.js TypeScript compliant options
   const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
@@ -100,7 +95,10 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({ spec, className = '' }) =
         display: !!spec.title,
         text: spec.title,
         color: '#e5e7eb',
-        font: { size: 12, weight: '600' as const },
+        font: { 
+          size: 12, 
+          weight: 'bold' as const  // ✅ FIXED: single quotes + as const
+        },
       },
     },
     scales: {
@@ -129,7 +127,6 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({ spec, className = '' }) =
     },
   }), [spec.title, spec.x_label, spec.y_label]);
 
-  // Determine chart component based on type
   const ChartComponent = spec.chart_type === 'bar' ? Bar : Line;
 
   return (
@@ -138,7 +135,6 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({ spec, className = '' }) =
         <ChartComponent 
           data={chartData} 
           options={chartOptions}
-          type={spec.chart_type}
         />
       </div>
       
