@@ -50,16 +50,16 @@ const Hero = ({title, subtitle}: HeroProps ) => {
 
           <div className="mb-10 flex flex-col items-center justify-center gap-4 sm:mb-0 sm:flex-row">
             <Link
-              to="/docs/get-started"
+              to="/login"
               className="neumorphic-button hover:shadow-[0_0_20px_rgba(155, 135, 245, 0.5)] relative w-full overflow-hidden rounded-full border border-white/10 bg-gradient-to-b from-white/10 to-white/5 px-8 py-4 text-white shadow-lg transition-all duration-300 hover:border-[#9b87f5]/30 sm:w-auto"
             >
-              Get Started
+              Login
             </Link>
             <a
               href="#how-it-works"
               className="flex w-full items-center justify-center gap-2 text-white/70 transition-colors hover:text-white sm:w-auto"
             >
-              <span>Learn how it works</span>
+              <span>Contact us</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"

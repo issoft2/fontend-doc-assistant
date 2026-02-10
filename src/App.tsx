@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import FeatureCards from "./components/FeatureCards";
 import { Routes, Route, useNavigate} from 'react-router-dom';
 import Login from "./pages/login";
 import { setNavigator } from "./lib/navigation";
-
-
+import ChatPage from "./pages/chat_page";
+import NotFound from "./pages/notFound";
+// import Dashboard from "./pages/admin_dashboard";
 
 
 const Home = () => (
@@ -31,12 +31,20 @@ const Home = () => (
 
     return (
       <>
-        <Navbar />
+      
 
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-        </Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/chat" element={<ChatPage />} />
+
+            <Route path="*" element={< NotFound />} />
+
+            {/* <Route path="/admin/config" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="tenant" element={<TenantForm />} />
+            </Route> */}
+      </Routes>
       </>
     );
   };
