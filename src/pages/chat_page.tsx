@@ -9,20 +9,9 @@ import EmptyState from '@/components/EmptyState';
 import { useAuthStore } from '../useAuthStore'; // ✅ FIXED: Your original import path
 import { listConversations, getConversation, deleteConversation } from '../lib/api';
 import { useQueryStream, type ChartSpec } from '@/composables/useQueryStream';
+import { ChatMessage, Conversation } from './chat/types'
 
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  sources?: string[];
-  chart_specs?: ChartSpec[];
-}
 
-interface Conversation {
-  conversation_id: string;
-  first_question: string;
-  last_activity_at: string;
-}
 
 // ✅ FIXED: Proper ref types - non-nullable as passed to components
 const ChatPage: React.FC = () => {
