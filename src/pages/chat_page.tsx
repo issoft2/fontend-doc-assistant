@@ -611,7 +611,7 @@ const UserMessage: React.FC<{
               <span className="text-slate-200/70">This will resend a new answer</span>
             </div>
             <textarea
-              ref={textareaRef}
+              ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
               value={editBuffer}
               onChange={(e) => onEditBufferChange(e.target.value)}
               className="w-full min-h-[72px] max-h-40 resize-none rounded-2xl border-2 border-indigo-300/70 bg-slate-900/80 px-4 py-3 text-sm text-slate-50 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 shadow-lg transition-all duration-200"
