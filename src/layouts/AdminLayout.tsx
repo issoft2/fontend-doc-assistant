@@ -1,16 +1,15 @@
 // src/layouts/AdminLayout.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuthStore } from '../useAuthStore'; // Adjust path
+import { motion } from 'framer-motion';
+import { useAuthStore } from '../useAuthStore';
 import { Menu, X, LogOut } from 'lucide-react';
-import logo from '@/assets/images/download.webp'; // Adjust path to your logo
-import { cn } from '@/lib/utils'; 
+import logo from '@/assets/images/download.webp';
+import { cn } from '@/lib/utils';
 
-
-// ✅ FIXED: Define User type locally (since MeResponse doesn't have role)
 interface User {
   role?: string | null;
-  [key: string]: any; // Allow other properties
+  [key: string]: any;
 }
 
 const AdminLayout: React.FC = () => {
@@ -20,14 +19,12 @@ const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Admin roles (same as your Vue version)
   const adminRoles = [
     'group_admin', 'group_exe', 'group_hr', 'group_finance', 'group_operation',
     'group_production', 'group_marketing', 'group_legal', 'sub_admin', 'sub_md',
     'sub_hr', 'sub_finance', 'sub_operations', 'vendor'
   ];
 
-  // ✅ FIXED: Safe role access with optional chaining
   const canSeeAdmin = user?.role && adminRoles.includes(String(user.role));
   
   const roleLabel = user?.role ? (() => {
@@ -39,167 +36,242 @@ const AdminLayout: React.FC = () => {
     return role;
   })() : 'Guest';
 
-  const toggleMobileNav = useCallback(() => {
-    setMobileNavOpen(prev => !prev);
-  }, []);
+  const navItems = [
+    { path: '/chat', label: '💬 Chat with Assistant', icon: '💬' },
+    { path: '/admin/ingest', label: '📥 Ingest & Configuration', icon: '📥' },
+    ...(user?.role === 'vendor' ? [{ path: '/admin/tenant-config', label: '⚙️ Configure Tenant', icon: '⚙️' }] : []),
+    { path: '/admin/tenants', label: '📋 Tenants', icon: '📋', roles: ['vendor', 'group_admin', 'gmd', 'group_hr', 'group_finance'] },
+    { path: '/admin/organizations', label: '🏢 Organizations', icon: '🏢', roles: ['vendor', 'group_admin', 'group_hr', 'group_finance'] },
+    { path: '/admin/companies', label: '🏭 Companies & Collections', icon: '🏭' },
+    { path: '/admin/users', label: '👥 Users', icon: '👥' },
+  ];
 
-  const closeMobileNav = useCallback(() => {
-    setMobileNavOpen(false);
-  }, []);
+  const visibleNavItems = navItems.filter(item => {
+    if (!item.roles) return true;
+    return item.roles.includes(String(user?.role));
+  });
 
-  const handleLogout = useCallback(() => {
+  const isActive = (path: string) => location.pathname === path;
+
+  const toggleMobileNav = () => setMobileNavOpen(prev => !prev);
+  const closeMobileNav = () => setMobileNavOpen(false);
+
+  const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
       logout();
       navigate('/login', { replace: true });
     }
-  }, [logout, navigate]);
-
-  const navItems = [
-    { path: '/chat', label: 'Chat with Assistant' },
-    { path: '/admin/ingest', label: 'Ingest & Configuration' },
-      ...(user?.role === 'vendor' ? [{ path: '/admin/tenant-config', label: 'Configure Tenant' }] : []), // ✅ NEW VENDOR-ONLY
-
-      // ✅ NEW TENANTS LINK - Vendor + Admin roles only
-      { 
-        path: '/admin/tenants', 
-        label: '📋 Tenants', 
-        roles: ['vendor', 'group_admin', 'gmd', 'group_hr', 'group_finance']
-      },
-
-      { 
-      path: '/admin/organizations', 
-      label: '🏢 Organizations', 
-      roles: ['vendor', 'group_admin', 'group_hr', 'group_finance'] 
-    },
-
-    { path: '/admin/companies', label: 'Companies & Collections' },
-    { path: '/admin/users', label: 'Users' },
-  ];
-
-  const isActive = (path: string) => location.pathname === path;
+  };
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
-      {/* Sidebar (desktop / tablet) */}
-      {canSeeAdmin && (
-        <aside className="w-64 bg-slate-900 text-slate-100 hidden md:flex md:flex-col shadow-2xl">
-          <div className="px-4 py-4 border-b border-slate-800 flex items-center gap-2">
-            <div className="h-8 w-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-md flex items-center justify-center">
-              <span className="text-white font-bold text-sm">OKA</span>
-            </div>
-            <span className="text-lg font-semibold truncate">
-              Knowledgebase Assistant
-            </span>
-          </div>
+    <div 
+      className="min-h-screen font-light text-white antialiased bg-gradient-to-br from-[#0a0613] via-[#150d27]/50 to-[#0a0613] overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0a0613 0%, #150d27 50%, #0a0613 100%)',
+      }}
+    >
+      {/* Animated background particles */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-20 right-20 w-64 h-64 bg-[#9b87f5]/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#9b87f5]/10 rounded-full blur-3xl animate-pulse delay-1000" />
+      </div>
 
-          <nav className="flex-1 px-3 py-4 space-y-1 text-sm">
-            {navItems.map((item) => (
-              <button
+      {/* Sidebar (desktop) */}
+      {canSeeAdmin && (
+        <motion.aside 
+          initial={{ x: -300 }}
+          animate={{ x: 0 }}
+          className="relative z-50 w-72 flex flex-col shadow-2xl backdrop-blur-xl bg-[#0a0613]/95 border-r border-white/5"
+          style={{
+            background: 'linear-gradient(180deg, rgba(10, 6, 19, 0.95) 0%, rgba(21, 13, 39, 0.95) 100%)',
+          }}
+        >
+          {/* Logo Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-6 border-b border-white/5 backdrop-blur-sm"
+            style={{
+              background: 'linear-gradient(135deg, rgba(155, 135, 245, 0.1) 0%, transparent 100%)',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <motion.div 
+                className="h-12 w-12 bg-gradient-to-r from-[#9b87f5] to-purple-600 rounded-2xl shadow-xl flex items-center justify-center p-2"
+                animate={{ 
+                  scale: [1, 1.05, 1],
+                  rotate: [0, 2, -2, 0]
+                }}
+                transition={{ 
+                  duration: 4, 
+                  repeat: Infinity, 
+                  repeatType: "mirror" 
+                }}
+              >
+                <img src={logo} alt="OKA" className="w-8 h-8 rounded-xl object-cover opacity-90" />
+              </motion.div>
+              <div>
+                <h1 className="text-xl font-light tracking-wide">Knowledgebase</h1>
+                <p className="text-xs text-[#9b87f5] font-light opacity-80">AI Assistant</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+            {visibleNavItems.map((item, index) => (
+              <motion.button
                 key={item.path}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
                 onClick={() => navigate(item.path)}
-                className={cn( // ✅ FIXED: cn now imported
-                  "block w-full text-left rounded-md px-3 py-2.5 font-medium transition-all duration-200 flex items-center gap-2",
+                className={cn(
+                  "group relative w-full text-left rounded-2xl px-4 py-3 font-light text-sm transition-all duration-300 flex items-center gap-3 overflow-hidden shadow-lg border border-white/5 backdrop-blur-sm hover:shadow-[0_0_20px_rgba(155,_135,_245,_0.3)] hover:border-[#9b87f5]/30",
                   isActive(item.path)
-                    ? "bg-slate-800 text-white shadow-md shadow-indigo-500/25 border-r-2 border-indigo-400"
-                    : "text-slate-300 hover:bg-slate-800/70 hover:text-white hover:shadow-md"
+                    ? "bg-gradient-to-r from-[#9b87f5]/20 to-purple-600/20 text-white shadow-[0_0_25px_rgba(155,_135,_245,_0.4)] border-[#9b87f5]/40 bg-[#9b87f5]/10"
+                    : "text-white/70 hover:text-white hover:bg-white/5"
                 )}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500" />
-                {item.label}
-              </button>
+                <span className={cn(
+                  "w-2.5 h-2.5 rounded-full shadow-sm flex-shrink-0",
+                  isActive(item.path)
+                    ? "bg-gradient-to-r from-[#9b87f5] to-purple-500 shadow-[#9b87f5]/50"
+                    : "bg-white/30 group-hover:bg-[#9b87f5]/60"
+                )} />
+                <span>{item.icon} {item.label}</span>
+                {isActive(item.path) && (
+                  <motion.div
+                    className="absolute right-2 w-1 h-6 bg-gradient-to-b from-[#9b87f5] to-purple-500 rounded shadow-md"
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </motion.button>
             ))}
           </nav>
 
-          <div className="px-4 py-3 border-t border-slate-800 text-xs text-slate-400 bg-gradient-to-r from-slate-900/50 to-slate-800/50">
-            <div className="flex items-center gap-2">
-              <span className="text-emerald-400 font-mono text-[10px]">{roleLabel}</span>
-              <span>Admin only</span>
+          {/* Footer */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-5 border-t border-white/5 backdrop-blur-sm"
+            style={{
+              background: 'linear-gradient(180deg, transparent 0%, rgba(155, 135, 245, 0.05) 100%)',
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="px-2 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-300 border border-emerald-400/30 font-mono font-light">
+                  {roleLabel}
+                </span>
+                <span className="text-white/40 font-light">Admin</span>
+              </div>
+              <motion.button
+                onClick={handleLogout}
+                className="neumorphic-button relative overflow-hidden rounded-full border border-white/10 bg-gradient-to-b from-white/5 to-white/2 px-3 py-2 text-white/70 shadow-lg hover:shadow-[0_0_20px_rgba(155,_135,_245,_0.3)] hover:border-[#9b87f5]/30 hover:text-white transition-all duration-300 group"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <LogOut className="h-4 w-4 group-hover:-rotate-12 transition-transform duration-200" />
+              </motion.button>
             </div>
-          </div>
-        </aside>
+          </motion.div>
+        </motion.aside>
       )}
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col">
-        <header className="h-14 bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-sm flex items-center justify-between px-4 sticky top-0 z-40">
-          <div className="flex items-center gap-3">
-            {/* Mobile menu button for admins */}
-            {canSeeAdmin && (
-              <button
-                type="button"
-                className="md:hidden inline-flex items-center justify-center p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 shadow-sm"
-                onClick={toggleMobileNav}
-                aria-label="Toggle menu"
-              >
-                {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            )}
-
-            <div className="font-semibold text-sm text-slate-800 bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text">
-              Admin Console
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 text-xs">
-            {user && (
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200/60 px-4 py-2 bg-gradient-to-r from-slate-50 to-slate-100 font-medium text-slate-700 hover:from-slate-100 hover:to-slate-200 hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/50 hover:text-slate-900 transition-all duration-200 shadow-sm"
-                title="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </button>
-            )}
-          </div>
-        </header>
-
-        {/* Mobile nav dropdown */}
-        {canSeeAdmin && mobileNavOpen && (
-          <div className="md:hidden bg-slate-900/95 backdrop-blur-xl text-slate-100 border-b border-slate-800 shadow-2xl">
-            <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm">
-              <div className="h-7 w-7 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-md flex items-center justify-center">
-                <span className="text-white font-bold text-xs">OKA</span>
-              </div>
-              <span className="text-sm font-semibold truncate">
-                Knowledgebase Assistant
-              </span>
-            </div>
-
-            <nav className="px-3 py-4 space-y-1 text-sm">
-              {navItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    closeMobileNav();
-                  }}
-                  className={cn( // ✅ FIXED: cn now works
-                    "block w-full text-left rounded-xl px-3 py-3 font-medium transition-all duration-200 flex items-center gap-2 shadow-sm",
-                    isActive(item.path)
-                      ? "bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-white border border-indigo-400/50 shadow-md shadow-indigo-500/25"
-                      : "text-slate-300 hover:bg-slate-800/70 hover:text-white hover:shadow-md hover:shadow-slate-900/25"
-                  )}
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col relative z-10">
+        {/* Header */}
+        <motion.header 
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
+          className="backdrop-blur-xl bg-white/5 border-b border-white/5 shadow-2xl sticky top-0 z-40"
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+          }}
+        >
+          <div className="px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {/* Mobile menu */}
+              {canSeeAdmin && (
+                <motion.button
+                  className="p-2 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:shadow-lg hover:shadow-[#9b87f5]/20 transition-all duration-200 md:hidden"
+                  onClick={toggleMobileNav}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <span className={`w-2 h-2 rounded-full ${isActive(item.path) ? 'bg-white' : 'bg-indigo-400'}`} />
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-
-            <div className="px-4 py-3 border-t border-slate-800/50 text-[11px] text-slate-400 bg-slate-900/50 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-400 font-mono text-[10px]">{roleLabel}</span>
-                <span>Admin only</span>
-              </div>
+                  {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </motion.button>
+              )}
+              <motion.div 
+                className="font-light text-2xl bg-gradient-to-r from-[#9b87f5] via-purple-500 to-indigo-500 bg-clip-text text-transparent drop-shadow-lg"
+                animate={{ scale: [1, 1.02, 1] }}
+                transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+              >
+                Admin Console
+              </motion.div>
             </div>
           </div>
+        </motion.header>
+
+        {/* Mobile Nav */}
+        {canSeeAdmin && mobileNavOpen && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            className="md:hidden backdrop-blur-xl bg-[#0a0613]/95 border-b border-white/5 shadow-2xl"
+            style={{
+              background: 'linear-gradient(180deg, rgba(10, 6, 19, 0.98) 0%, rgba(21, 13, 39, 0.98) 100%)',
+            }}
+          >
+            <div className="max-h-[70vh] overflow-y-auto">
+              <div className="p-6 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-gradient-to-r from-[#9b87f5] to-purple-600 rounded-xl shadow-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">OKA</span>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-light">Knowledgebase</h2>
+                    <p className="text-xs text-[#9b87f5] opacity-80">AI Assistant</p>
+                  </div>
+                </div>
+              </div>
+              
+              <nav className="p-4 space-y-2">
+                {visibleNavItems.map((item, index) => (
+                  <motion.button
+                    key={item.path}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => {
+                      navigate(item.path);
+                      closeMobileNav();
+                    }}
+                    className={cn(
+                      "w-full text-left rounded-2xl px-4 py-4 font-light text-sm transition-all duration-300 flex items-center gap-3 shadow-lg border border-white/5 backdrop-blur-sm hover:shadow-[0_0_20px_rgba(155,_135,_245,_0.3)] hover:border-[#9b87f5]/30",
+                      isActive(item.path) && "bg-gradient-to-r from-[#9b87f5]/20 to-purple-600/20 text-white shadow-[0_0_25px_rgba(155,_135,_245,_0.4)] border-[#9b87f5]/40"
+                    )}
+                  >
+                    <span className="w-3 h-3 rounded-full bg-gradient-to-r from-[#9b87f5] to-purple-500 shadow-md" />
+                    <span>{item.icon} {item.label}</span>
+                  </motion.button>
+                ))}
+              </nav>
+            </div>
+          </motion.div>
         )}
 
-        {/* Main content */}
-        <main className="flex-1 p-4 md:p-6 bg-slate-50/50 backdrop-blur-sm">
+        {/* Main Content Area */}
+        <motion.main 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex-1 p-2 md:p-6 lg:p-8 relative z-10"
+        >
           <Outlet />
-        </main>
+        </motion.main>
       </div>
     </div>
   );
