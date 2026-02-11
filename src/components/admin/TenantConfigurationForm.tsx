@@ -1,142 +1,76 @@
-import React, { useState, useEffect, useCallback } from 'react';
+// src/pages/admin/TenantConfigForm.tsx - ✅ USES EXISTING API
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuthStore } from '../../useAuthStore';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, ArrowLeft, Plus, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { listCompanies } from '@/lib/api';
+import { configureTenantPayload } from '@/lib/api'; // ✅ YOUR EXISTING API
 
-interface Company {
+interface TenantFormData {
   tenant_id: string;
-  display_name?: string;
-  plan?: string;
-  subscription_status?: string;
-  trial_ends_at?: string;
-  created_at: string;
+  plan: 'free_trial' | 'starter' | 'pro' | 'enterprise';
+  subscription_status: 'trialing' | 'active' | 'expired' | 'cancelled';
 }
 
-interface User {
-  role?: string | null;
-  tenant_id?: string | null;
-  [key: string]: any;
-}
-
-interface TenantListProps {
-  className?: string;
-}
-
-const TenantsList: React.FC<TenantListProps> = ({ className = '' }) => {
-  const authStore = useAuthStore() as { user: User | null };
-  const user = authStore.user;
-  
-  const [companies, setCompanies] = useState<Company[]>([]);
+const TenantConfigForm: React.FC = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState<TenantFormData>({
+    tenant_id: '', // ✅ Required by your API
+    plan: 'free_trial',
+    subscription_status: 'trialing'
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [lastLoadedAt, setLastLoadedAt] = useState('');
+  const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    loadCompanies();
-  }, []);
-
-  const loadCompanies = useCallback(async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess(false);
+    
     try {
-      const res: any = await listCompanies();
-      const payload = Array.isArray(res) ? res : res?.data || [];
-      setCompanies(Array.isArray(payload) ? payload : []);
-      setLastLoadedAt(new Date().toLocaleTimeString());
-    } catch (e: any) {
-      console.error('loadCompanies error:', e);
-      setError(e?.response?.data?.detail || 'Failed to load tenants.');
+      // ✅ USES YOUR EXISTING API
+      await configureTenantPayload(formData);
+      
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/admin/tenants');
+      }, 1500);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Failed to configure tenant');
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const formatDate = (value: string) => {
-    if (!value) return '—';
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
   };
 
-  const isVendor = user?.role === 'vendor';
-  const userTenantId = user?.tenant_id || '';
-  const visibleCompanies = companies.filter(company => {
-    if (isVendor) return true;
-    return company.tenant_id === userTenantId;
-  });
-
-  // Premium gradient badges
-  const getPlanBadge = (plan?: string) => {
-    const badges = {
-      'free_trial': { bg: 'from-amber-500/20 to-orange-500/20', text: 'text-amber-300', border: 'border-amber-400/40', icon: '🧪' },
-      'starter': { bg: 'from-sky-500/20 to-blue-500/20', text: 'text-sky-300', border: 'border-sky-400/40', icon: '⭐' },
-      'pro': { bg: 'from-indigo-500/20 to-purple-500/20', text: 'text-indigo-300', border: 'border-indigo-400/40', icon: '🚀' },
-      'enterprise': { bg: 'from-emerald-500/20 to-teal-500/20', text: 'text-emerald-300', border: 'border-emerald-400/40', icon: '🏆' },
-      default: { bg: 'from-slate-500/10 to-slate-600/10', text: 'text-slate-300', border: 'border-slate-400/30', icon: '—' }
-    };
-    const badge = badges[plan as keyof typeof badges] || badges.default;
-    
+  if (success) {
     return (
       <motion.div 
-        className={cn(
-          "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-light rounded-2xl backdrop-blur-sm shadow-lg border",
-          badge.bg, badge.border
-        )}
-        whileHover={{ scale: 1.05 }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full h-full flex items-center justify-center p-6 lg:p-12 isolate bg-transparent relative z-10"
       >
-        <span>{badge.icon}</span>
-        <span className={badge.text}>{plan || 'Unknown'}</span>
-      </motion.div>
-    );
-  };
-
-  const getStatusBadge = (status?: string) => {
-    const badges = {
-      'trialing': { bg: 'from-amber-500/20 to-orange-500/20', text: 'text-amber-200', border: 'border-amber-400/40', icon: '⏳' },
-      'active': { bg: 'from-emerald-500/20 to-teal-500/20', text: 'text-emerald-200', border: 'border-emerald-400/40', icon: '✅' },
-      'expired': { bg: 'from-red-500/20 to-rose-500/20', text: 'text-red-200', border: 'border-red-400/40', icon: '⏰' },
-      'cancelled': { bg: 'from-slate-500/20 to-slate-600/20', text: 'text-slate-300', border: 'border-slate-400/30', icon: '❌' },
-      default: { bg: 'from-slate-500/10 to-slate-600/10', text: 'text-slate-300', border: 'border-slate-400/30', icon: '⚪' }
-    };
-    const badge = badges[status as keyof typeof badges] || badges.default;
-    
-    return (
-      <motion.div 
-        className={cn(
-          "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-light rounded-2xl backdrop-blur-sm shadow-lg border",
-          badge.bg, badge.border
-        )}
-        whileHover={{ scale: 1.05 }}
-      >
-        <span>{badge.icon}</span>
-        <span className={badge.text}>{status || 'Unknown'}</span>
-      </motion.div>
-    );
-  };
-
-  if (loading) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className={cn("flex items-center justify-center min-h-[400px] backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-12", className)}
-        style={{
-          background: 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-        }}
-      >
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-20 h-20 bg-gradient-to-r from-[#9b87f5]/30 to-purple-500/30 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-xl animate-pulse">
-            <Loader2 className="w-10 h-10 text-[#9b87f5] animate-spin" />
+        <motion.div 
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="backdrop-blur-xl bg-emerald-500/10 border border-emerald-400/40 rounded-3xl shadow-2xl p-16 lg:p-24 text-center max-w-2xl w-full"
+          style={{
+            background: 'linear-gradient(145deg, rgba(16,185,129,0.15) 0%, rgba(34,197,94,0.08) 100%)',
+          }}
+        >
+          <div className="w-28 h-28 bg-emerald-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border-4 border-emerald-400/30 shadow-2xl">
+            <CheckCircle className="w-20 h-20 text-emerald-400 animate-pulse" />
           </div>
-          <div className="text-center">
-            <h2 className="text-2xl font-light text-white mb-2 bg-gradient-to-r from-white to-[#9b87f5] bg-clip-text text-transparent drop-shadow-lg">
-              Loading Tenants
-            </h2>
-            <p className="text-sm text-white/50 font-light">Fetching tenant data...</p>
-          </div>
-        </div>
+          <h1 className="text-4xl lg:text-5xl font-light mb-6 bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent drop-shadow-2xl">
+            Tenant Configured!
+          </h1>
+          <p className="text-xl text-white/80 font-light mb-8 max-w-md mx-auto leading-relaxed">
+            Your tenant configuration has been successfully updated.
+          </p>
+          <p className="text-emerald-300 font-light text-lg">Redirecting to tenant list...</p>
+        </motion.div>
       </motion.div>
     );
   }
@@ -145,70 +79,35 @@ const TenantsList: React.FC<TenantListProps> = ({ className = '' }) => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn("max-w-7xl mx-auto py-8 space-y-8", className)}
+      className="w-full h-full space-y-12 p-6 lg:p-12 isolate bg-transparent relative z-10"
     >
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-8"
+        className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-8 lg:p-12"
         style={{
           background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
         }}
       >
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-light mb-3 bg-gradient-to-r from-white via-[#9b87f5] to-purple-400 bg-clip-text text-transparent drop-shadow-2xl">
-              Tenants
-            </h1>
-            <motion.p 
-              className="text-lg text-white/60 font-light max-w-2xl leading-relaxed"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              {isVendor 
-                ? 'All registered tenants across your platform (Vendor view)'
-                : userTenantId 
-                  ? `Your organization: <span className="text-[#9b87f5] font-light">${userTenantId}</span>`
-                  : 'No tenant assigned to your account'
-              }
-            </motion.p>
-          </div>
-          
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col sm:flex-row gap-4"
-          >
-            <motion.div 
-              className="text-right text-sm text-white/50 font-light"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <div>Total: <span className="text-[#9b87f5] font-light text-lg">{visibleCompanies.length}</span></div>
-              {lastLoadedAt && (
-                <div>Last updated: <span className="text-xs">{lastLoadedAt}</span></div>
-              )}
-            </motion.div>
-            
+        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+          <div className="flex items-center gap-4">
             <motion.button
-              onClick={loadCompanies}
+              onClick={() => navigate('/admin/tenants')}
+              className="p-3 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm hover:bg-white/20 hover:shadow-lg transition-all duration-200 flex-shrink-0"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               disabled={loading}
-              className="group relative h-14 px-8 rounded-2xl bg-gradient-to-r from-[#9b87f5]/20 to-purple-600/20 border border-[#9b87f5]/30 backdrop-blur-sm text-white font-light shadow-lg hover:shadow-[0_0_25px_rgba(155,_135,_245,_0.4)] hover:border-[#9b87f5]/50 hover:bg-[#9b87f5]/30 transition-all duration-300 flex items-center gap-3"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <RefreshCw className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-                  Refresh
-                </>
-              )}
+              <ArrowLeft className="w-5 h-5" />
             </motion.button>
-          </motion.div>
+            <div>
+              <h1 className="text-4xl lg:text-5xl font-light bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent drop-shadow-2xl">
+                Configure Tenant
+              </h1>
+              <p className="text-xl text-white/60 font-light mt-2">Update tenant plan and subscription settings</p>
+            </div>
+          </div>
         </div>
       </motion.div>
 
@@ -217,145 +116,140 @@ const TenantsList: React.FC<TenantListProps> = ({ className = '' }) => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-6 rounded-3xl bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-400/40 backdrop-blur-sm shadow-lg text-red-100 font-light"
+          className="p-8 lg:p-12 rounded-3xl bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-400/40 backdrop-blur-sm shadow-2xl text-red-100 font-light flex items-center gap-4 max-w-2xl mx-auto"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse" />
-            <span className="text-sm">{error}</span>
-          </div>
+          <div className="w-4 h-4 bg-red-400 rounded-full animate-pulse flex-shrink-0" />
+          <span className="text-lg">{error}</span>
         </motion.div>
       )}
 
-      {/* Empty State */}
-      {!visibleCompanies.length && !loading && !error && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-16 text-center"
-          style={{
-            background: 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-          }}
-        >
-          <div className="w-24 h-24 bg-gradient-to-r from-[#9b87f5]/20 to-purple-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-[#9b87f5]/30 shadow-xl animate-pulse">
-            <span className="text-4xl">📋</span>
-          </div>
-          <h2 className="text-2xl font-light mb-4 text-white bg-gradient-to-r from-white to-[#9b87f5] bg-clip-text text-transparent drop-shadow-lg">
-            {isVendor ? 'No Tenants Yet' : 'No Tenants Accessible'}
-          </h2>
-          <p className="text-lg text-white/50 font-light max-w-md mx-auto mb-8 leading-relaxed">
-            {isVendor
-              ? 'No tenants found yet. Create your first tenant on the Configuration page.'
-              : 'No tenants accessible to your account. Contact your administrator.'
-            }
-          </p>
-        </motion.div>
-      )}
-
-      {/* Tenants Table */}
-      {visibleCompanies.length > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="backdrop-blur-xl bg-white/3 border border-white/5 shadow-2xl rounded-3xl overflow-hidden"
-          style={{
-            background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-          }}
-        >
-          {/* Table Header */}
-          <div className="backdrop-blur-sm bg-white/5 border-b border-white/10 px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-gradient-to-r from-[#9b87f5] to-purple-500 rounded-full shadow-sm animate-pulse" />
-                <h3 className="text-2xl font-light text-white drop-shadow-lg">Tenant Directory</h3>
+      {/* Form Card */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl overflow-hidden isolate"
+        style={{
+          background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+        }}
+      >
+        <div className="p-8 lg:p-12">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Tenant ID */}
+            <div className="space-y-2">
+              <label className="text-lg font-light text-white/80 block mb-3">Tenant ID <span className="text-emerald-400">*</span></label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="e.g. tenant_abc123"
+                  value={formData.tenant_id}
+                  onChange={(e) => setFormData({ ...formData, tenant_id: e.target.value })}
+                  className="w-full h-16 px-6 text-xl font-light bg-white/10 border border-white/20 rounded-3xl backdrop-blur-sm text-white placeholder-white/40 focus:border-emerald-400/50 focus:outline-none focus:ring-4 focus:ring-emerald-400/20 transition-all duration-300 shadow-xl"
+                  required
+                  disabled={loading}
+                />
               </div>
             </div>
-          </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <div className="divide-y divide-white/5">
-              {visibleCompanies.map((company, index) => (
-                <motion.div
-                  key={company.tenant_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="group hover:bg-white/5 transition-all duration-300"
-                >
-                  <div className="px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start hover:shadow-[0_0_25px_rgba(155,_135,_245,_0.15)]">
-                    {/* Company Info */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full shadow-sm group-hover:scale-110 transition-transform duration-300" />
-                        <div>
-                          <h4 className="text-xl font-light text-white drop-shadow-lg group-hover:text-[#9b87f5] transition-colors">
-                            {company.display_name || company.tenant_id}
-                          </h4>
-                          <p className="text-sm text-white/60 font-light flex items-center gap-2">
-                            ID: <span className="font-mono text-[#9b87f5]">{company.tenant_id}</span>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Plan & Status */}
-                    <div className="space-y-4 lg:col-span-2">
-                      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                        <div className="flex-1 min-w-0">
-                          <span className="text-xs text-white/50 font-light uppercase tracking-wider block mb-1">Plan</span>
-                          {getPlanBadge(company.plan)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-xs text-white/50 font-light uppercase tracking-wider block mb-1">Status</span>
-                          {getStatusBadge(company.subscription_status)}
-                        </div>
-                      </div>
-                      
-                      {company.trial_ends_at && (
-                        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-2xl border border-amber-400/20 backdrop-blur-sm">
-                          <div className="w-2 h-2 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full shadow-sm" />
-                          <div>
-                            <span className="text-xs text-white/60 font-light block mb-1">Trial ends</span>
-                            <span className="text-sm font-light text-amber-200">{formatDate(company.trial_ends_at)}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Created Date */}
-                    <div className="text-right lg:col-start-3 lg:row-span-2 lg:flex lg:flex-col lg:justify-end">
-                      <span className="text-xs text-white/40 font-light block mb-1 uppercase tracking-wider">Created</span>
-                      <span className="text-lg font-light text-white/80">{formatDate(company.created_at)}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+            {/* Plan Selection */}
+            <div className="space-y-2">
+              <label className="text-lg font-light text-white/80 block mb-3">Subscription Plan</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { value: 'free_trial', label: '🧪 Free Trial', desc: '14 days trial' },
+                  { value: 'starter', label: '⭐ Starter', desc: '$29/mo' },
+                  { value: 'pro', label: '🚀 Pro', desc: '$99/mo' },
+                  { value: 'enterprise', label: '🏆 Enterprise', desc: 'Custom' }
+                ].map((plan) => (
+                  <motion.button
+                    key={plan.value}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, plan: plan.value as any })}
+                    disabled={loading}
+                    className={cn(
+                      "group relative h-28 p-6 rounded-2xl border-2 backdrop-blur-sm shadow-xl transition-all duration-300 flex flex-col items-center justify-center text-center disabled:opacity-50",
+                      formData.plan === plan.value
+                        ? "border-emerald-400/50 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,_185,_129,_0.3)] scale-105"
+                        : "border-white/20 bg-white/5 hover:border-emerald-400/30 hover:bg-emerald-500/5 hover:shadow-[0_0_20px_rgba(16,_185,_129,_0.2)]"
+                    )}
+                    whileHover={{ y: -4 }}
+                  >
+                    <span className="text-2xl mb-2">{plan.label.split(' ')[0]}</span>
+                    <span className="font-light text-white/90 group-hover:text-emerald-300">{plan.label.split(' ').slice(1).join(' ')}</span>
+                    <span className="text-xs text-white/60 mt-1">{plan.desc}</span>
+                  </motion.button>
+                ))}
+              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
 
-      {/* Floating Action */}
-      {isVendor && (
-        <motion.div 
-          className="fixed bottom-8 right-8 z-50"
-          initial={{ opacity: 0, scale: 0.8, x: 20 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          transition={{ delay: 1 }}
-        >
-          <motion.button
-            className="w-16 h-16 bg-gradient-to-r from-[#9b87f5] to-purple-600 text-white rounded-3xl shadow-2xl hover:shadow-[0_0_40px_rgba(155,_135,_245,_0.6)] border-4 border-white/20 flex items-center justify-center transition-all duration-300"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={loadCompanies}
-          >
-            <RefreshCw className="w-6 h-6 animate-spin-slow" />
-          </motion.button>
-        </motion.div>
-      )}
+            {/* Status Selection */}
+            <div className="space-y-2">
+              <label className="text-lg font-light text-white/80 block mb-3">Subscription Status</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { value: 'trialing', label: '⏳ Trialing', desc: 'Active trial' },
+                  { value: 'active', label: '✅ Active', desc: 'Paid plan' },
+                  { value: 'expired', label: '⏰ Expired', desc: 'Past due' },
+                  { value: 'cancelled', label: '❌ Cancelled', desc: 'Inactive' }
+                ].map((status) => (
+                  <motion.button
+                    key={status.value}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, subscription_status: status.value as any })}
+                    disabled={loading}
+                    className={cn(
+                      "group relative h-28 p-6 rounded-2xl border-2 backdrop-blur-sm shadow-xl transition-all duration-300 flex flex-col items-center justify-center text-center disabled:opacity-50",
+                      formData.subscription_status === status.value
+                        ? "border-emerald-400/50 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,_185,_129,_0.3)] scale-105"
+                        : "border-white/20 bg-white/5 hover:border-emerald-400/30 hover:bg-emerald-500/5 hover:shadow-[0_0_20px_rgba(16,_185,_129,_0.2)]"
+                    )}
+                    whileHover={{ y: -4 }}
+                  >
+                    <span className="text-2xl mb-2">{status.label.split(' ')[0]}</span>
+                    <span className="font-light text-white/90 group-hover:text-emerald-300">{status.label.split(' ').slice(1).join(' ')}</span>
+                    <span className="text-xs text-white/60 mt-1">{status.desc}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Submit Buttons */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="pt-8 border-t border-white/10 flex gap-4"
+            >
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate('/admin/tenants')}
+                disabled={loading}
+                className="h-16 px-12 text-lg font-light border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-3xl flex-1 shadow-xl transition-all duration-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading || !formData.tenant_id}
+                className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-3xl flex-1 shadow-2xl hover:shadow-[0_0_40px_rgba(16,_185,_129,_0.4)] transition-all duration-300 flex items-center gap-3"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-6 h-6" />
+                    Configure Tenant
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          </form>
+        </div>
+      </motion.div>
     </motion.div>
   );
 };
 
-export default TenantsList;
+export default TenantConfigForm;
