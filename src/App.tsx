@@ -9,6 +9,7 @@ import AdminLayout from "./layouts/AdminLayout"; // ✅ NEW
 import NotFound from "./pages/notFound";
 import TenantConfigForm from "./components/admin/TenantConfigurationForm";
 import TenantsList from "./components/admin/TenantsList";
+import OrganizationsList from "./components/admin/OrganizationsList"
 // import Dashboard from "./pages/admin_dashboard"; // ✅ Uncommented
 // import TenantForm from "./pages/TenantForm"; // ✅ Add your pages
 
@@ -38,8 +39,10 @@ const App = () => {
 
       {/* ✅ NEW: Admin routes with layout */}
       <Route path="/admin" element={<AdminLayout />}>
-        <Route path="tenant-config" element={<TenantConfigForm />} />  {/* ✅ NEW */}
-          <Route path="tenants" element={<TenantsList />} />  {/* ✅ NEW */}
+        <Route path="tenant-config" element={<TenantConfigForm />} /> 
+        <Route path="tenants" element={<TenantsList />} />  
+        <Route path="organizations" element={<OrganizationsList />} />  
+
         {/* <Route index element={<Dashboard />} /> */}
         {/* <Route path="ingest" element={<Dashboard />} />  */}
         {/* // <Route path="companies" element={<Dashboard />} />  */}
