@@ -1,17 +1,21 @@
 // src/layouts/AdminLayout.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuthStore } from '@/useAuthStore'; // Adjust path
+import { useAuthStore } from '../useAuthStore'; // Adjust path
 import { Menu, X, LogOut } from 'lucide-react';
 import logo from '@/assets/images/download.webp'; // Adjust path to your logo
+import { cn } from '@/lib/utils'; 
 
-interface AdminLayoutProps {
-  children?: React.ReactNode;
+
+// ✅ FIXED: Define User type locally (since MeResponse doesn't have role)
+interface User {
+  role?: string | null;
+  [key: string]: any; // Allow other properties
 }
 
-const AdminLayout: React.FC<AdminLayoutProps> = () => {
+const AdminLayout: React.FC = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuthStore() as { user: User | null; logout: () => void };
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,6 +27,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = () => {
     'sub_hr', 'sub_finance', 'sub_operations', 'vendor'
   ];
 
+  // ✅ FIXED: Safe role access with optional chaining
   const canSeeAdmin = user?.role && adminRoles.includes(String(user.role));
   
   const roleLabel = user?.role ? (() => {
@@ -64,11 +69,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = () => {
       {canSeeAdmin && (
         <aside className="w-64 bg-slate-900 text-slate-100 hidden md:flex md:flex-col shadow-2xl">
           <div className="px-4 py-4 border-b border-slate-800 flex items-center gap-2">
-            <img
-              src={logo}
-              alt="Organization Knowledge Assistant"
-              className="h-8 w-8 rounded-lg shadow-md"
-            />
+            <div className="h-8 w-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-md flex items-center justify-center">
+              <span className="text-white font-bold text-sm">OKA</span>
+            </div>
             <span className="text-lg font-semibold truncate">
               Organization Knowledge Assistant
             </span>
@@ -79,7 +82,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={cn(
+                className={cn( // ✅ FIXED: cn now imported
                   "block w-full text-left rounded-md px-3 py-2.5 font-medium transition-all duration-200 flex items-center gap-2",
                   isActive(item.path)
                     ? "bg-slate-800 text-white shadow-md shadow-indigo-500/25 border-r-2 border-indigo-400"
@@ -120,7 +123,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = () => {
             <div className="font-semibold text-sm text-slate-800 bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text">
               Admin Console
             </div>
-          </div>Admin Console
+          </div>
 
           <div className="flex items-center gap-3 text-xs">
             {user && (
@@ -140,11 +143,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = () => {
         {canSeeAdmin && mobileNavOpen && (
           <div className="md:hidden bg-slate-900/95 backdrop-blur-xl text-slate-100 border-b border-slate-800 shadow-2xl">
             <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm">
-              <img
-                src={logo}
-                alt="Organization Knowledge Assistant"
-                className="h-7 w-7 rounded-lg shadow-md"
-              />
+              <div className="h-7 w-7 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-md flex items-center justify-center">
+                <span className="text-white font-bold text-xs">OKA</span>
+              </div>
               <span className="text-sm font-semibold truncate">
                 Organization Knowledge Assistant
               </span>
@@ -158,7 +159,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = () => {
                     navigate(item.path);
                     closeMobileNav();
                   }}
-                  className={cn(
+                  className={cn( // ✅ FIXED: cn now works
                     "block w-full text-left rounded-xl px-3 py-3 font-medium transition-all duration-200 flex items-center gap-2 shadow-sm",
                     isActive(item.path)
                       ? "bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-white border border-indigo-400/50 shadow-md shadow-indigo-500/25"
