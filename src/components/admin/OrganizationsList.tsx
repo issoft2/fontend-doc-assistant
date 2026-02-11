@@ -42,12 +42,14 @@ const OrganizationsList: React.FC = () => {
   const [orgMessage, setOrgMessage] = useState('');
   const [orgError, setOrgError] = useState('');
 
+  // Auto-select tenant for non-vendors
   useEffect(() => {
     if (!isVendor && user?.tenant_id) {
       setSelectedTenantId(user.tenant_id);
     }
   }, [isVendor, user?.tenant_id]);
 
+  // Load companies for vendor tenant selection
   const loadCompanies = useCallback(async () => {
     if (!isVendor) return;
     setCompaniesLoading(true);
@@ -69,6 +71,7 @@ const OrganizationsList: React.FC = () => {
     loadCompanies();
   }, [loadCompanies]);
 
+  // Load organizations for selected tenant
   const loadOrganizations = useCallback(async (tenantId: string) => {
     if (!tenantId) return;
     setLoading(true);
@@ -84,6 +87,7 @@ const OrganizationsList: React.FC = () => {
     }
   }, []);
 
+  // Create new organization
   const handleCreateOrganization = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTenantId || !orgName.trim()) return;
@@ -118,27 +122,27 @@ const OrganizationsList: React.FC = () => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-6xl mx-auto py-12 space-y-12"
+      className="w-full h-full space-y-12 p-4 md:p-8 lg:p-12" // ✅ FULL WIDTH FOR SIDEBAR LAYOUT
     >
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-10 text-center"
+        className="w-full backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-6 lg:p-10 text-center"
         style={{
           background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
         }}
       >
         <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#9b87f5]/20 to-purple-600/20 border border-[#9b87f5]/30 mb-8 backdrop-blur-sm shadow-lg">
           <span className="w-2.5 h-2.5 bg-gradient-to-r from-[#9b87f5] to-purple-500 rounded-full shadow-md animate-pulse" />
-          <h1 className="text-4xl font-light bg-gradient-to-r from-white via-[#9b87f5] to-purple-400 bg-clip-text text-transparent drop-shadow-2xl">
+          <h1 className="text-3xl lg:text-4xl font-light bg-gradient-to-r from-white via-[#9b87f5] to-purple-400 bg-clip-text text-transparent drop-shadow-2xl">
             Organizations
           </h1>
         </div>
-        <p className="text-xl text-white/60 font-light max-w-3xl mx-auto leading-relaxed">
+        <p className="text-lg lg:text-xl text-white/60 font-light max-w-4xl mx-auto leading-relaxed">
           {isVendor 
             ? 'Manage organizations across all your tenants with precision control'
-            : `Managing organizations for: <span className="text-[#9b87f5] font-light">${tenantDisplayName}</span>`
+            : `Managing organizations for: <span className="text-[#9b87f5] font-semibold">${tenantDisplayName}</span>`
           }
         </p>
       </motion.div>
@@ -147,16 +151,14 @@ const OrganizationsList: React.FC = () => {
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-xl bg-[#0a0613]/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden relative group"
+        className="w-full backdrop-blur-xl bg-[#0a0613]/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden relative group"
         style={{
           background: 'linear-gradient(145deg, rgba(10, 6, 19, 0.95) 0%, rgba(21, 13, 39, 0.95) 100%)',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
         }}
       >
-        {/* Animated border glow */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#9b87f5]/20 via-transparent to-purple-600/20 rounded-3xl blur opacity-75 group-hover:opacity-100 transition-all duration-500" />
-        
-        <div className="relative z-10 p-10">
+        <div className="relative z-10 p-6 lg:p-10">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full shadow-sm animate-pulse" />
             <h2 className="text-2xl font-light text-white drop-shadow-lg">Create Organization</h2>
@@ -252,41 +254,41 @@ const OrganizationsList: React.FC = () => {
                     <span className="font-light">Creating...</span>
                   </>
                 ) : (
-                  <>
-                    <span className="font-light">Create Organization</span>
-                  </>
+                  <span className="font-light">Create Organization</span>
                 )}
               </motion.button>
             </motion.div>
           </form>
 
           {/* Messages */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mt-10 space-y-4"
-          >
-            {orgMessage && (
-              <motion.div 
-                className="p-6 rounded-3xl bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-400/40 backdrop-blur-sm shadow-xl text-emerald-100 font-light text-lg shadow-emerald-500/25 flex items-center gap-4"
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-              >
-                <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping" />
-                {orgMessage}
-              </motion.div>
-            )}
-            {orgError && (
-              <motion.div 
-                className="p-6 rounded-3xl bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-400/40 backdrop-blur-sm shadow-xl text-red-100 font-light text-lg shadow-red-500/25 flex items-center gap-4"
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-              >
-                <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse" />
-                {orgError}
-              </motion.div>
-            )}
-          </motion.div>
+          {(orgMessage || orgError) && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-10 space-y-4"
+            >
+              {orgMessage && (
+                <motion.div 
+                  className="p-6 rounded-3xl bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-400/40 backdrop-blur-sm shadow-xl text-emerald-100 font-light text-lg shadow-emerald-500/25 flex items-center gap-4"
+                  initial={{ scale: 0.95 }}
+                  animate={{ scale: 1 }}
+                >
+                  <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping" />
+                  {orgMessage}
+                </motion.div>
+              )}
+              {orgError && (
+                <motion.div 
+                  className="p-6 rounded-3xl bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-400/40 backdrop-blur-sm shadow-xl text-red-100 font-light text-lg shadow-red-500/25 flex items-center gap-4"
+                  initial={{ scale: 0.95 }}
+                  animate={{ scale: 1 }}
+                >
+                  <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse" />
+                  {orgError}
+                </motion.div>
+              )}
+            </motion.div>
+          )}
         </div>
       </motion.div>
 
@@ -295,6 +297,7 @@ const OrganizationsList: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="w-full"
         >
           <motion.button
             onClick={() => loadOrganizations(selectedTenantId)}
@@ -323,18 +326,18 @@ const OrganizationsList: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="backdrop-blur-xl bg-white/3 border border-white/5 shadow-2xl rounded-3xl overflow-hidden"
+          className="w-full backdrop-blur-xl bg-white/3 border border-white/5 shadow-2xl rounded-3xl overflow-hidden"
           style={{
             background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
           }}
         >
-          <div className="backdrop-blur-sm bg-white/5 border-b border-white/10 px-10 py-8">
+          <div className="backdrop-blur-sm bg-white/5 border-b border-white/10 px-6 lg:px-10 py-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full shadow-sm animate-pulse" />
                 <div>
-                  <h3 className="text-3xl font-light text-white drop-shadow-lg">Organization Directory</h3>
-                  <p className="text-lg text-white/60 font-light mt-1">
+                  <h3 className="text-2xl lg:text-3xl font-light text-white drop-shadow-lg">Organization Directory</h3>
+                  <p className="text-base lg:text-lg text-white/60 font-light mt-1">
                     Tenant: <span className="text-[#9b87f5]">{tenantDisplayName}</span> • {organizations.length} organizations
                   </p>
                 </div>
@@ -342,23 +345,23 @@ const OrganizationsList: React.FC = () => {
             </div>
           </div>
 
-          <div className="divide-y divide-white/5 p-2">
+          <div className="divide-y divide-white/5">
             {organizations.map((org, index) => (
               <motion.div
-                key={org.id}
+                key={org.id} // ✅ Stable key
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="group hover:bg-white/5 transition-all duration-500 p-10 hover:shadow-[0_0_25px_rgba(155,_135,_245,_0.15)]"
+                className="group hover:bg-white/5 transition-all duration-500 p-6 lg:p-10 hover:shadow-[0_0_25px_rgba(155,_135,_245,_0.15)]"
               >
                 <div className="flex items-center justify-between gap-6">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-2xl font-light text-white drop-shadow-lg group-hover:text-[#9b87f5] transition-colors truncate">
+                      <h4 className="text-xl lg:text-2xl font-light text-white drop-shadow-lg group-hover:text-[#9b87f5] transition-colors truncate">
                         {org.name}
                       </h4>
-                      <p className="text-lg text-white/60 font-light flex items-center gap-2 mt-1">
+                      <p className="text-base lg:text-lg text-white/60 font-light flex items-center gap-2 mt-1">
                         <span className="font-mono text-sm text-[#9b87f5] bg-white/10 px-3 py-1 rounded-2xl backdrop-blur-sm">
                           {org.id}
                         </span>
@@ -386,18 +389,18 @@ const OrganizationsList: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-20 text-center"
+          className="w-full backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-12 lg:p-20 text-center"
           style={{
             background: 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
           }}
         >
-          <div className="w-28 h-28 bg-gradient-to-r from-[#9b87f5]/20 to-purple-500/20 rounded-3xl flex items-center justify-center mx-auto mb-12 border border-[#9b87f5]/30 shadow-2xl animate-pulse">
-            <span className="text-5xl">🏢</span>
+          <div className="w-24 h-24 lg:w-28 lg:h-28 bg-gradient-to-r from-[#9b87f5]/20 to-purple-500/20 rounded-3xl flex items-center justify-center mx-auto mb-12 border border-[#9b87f5]/30 shadow-2xl animate-pulse">
+            <span className="text-4xl lg:text-5xl">🏢</span>
           </div>
-          <h2 className="text-4xl font-light mb-6 text-white bg-gradient-to-r from-white to-[#9b87f5] bg-clip-text text-transparent drop-shadow-2xl">
+          <h2 className="text-3xl lg:text-4xl font-light mb-6 text-white bg-gradient-to-r from-white to-[#9b87f5] bg-clip-text text-transparent drop-shadow-2xl">
             No Tenant Selected
           </h2>
-          <p className="text-xl text-white/50 font-light max-w-2xl mx-auto mb-12 leading-relaxed">
+          <p className="text-lg lg:text-xl text-white/50 font-light max-w-2xl mx-auto leading-relaxed">
             Select a tenant from the dropdown above to create and manage organizations
           </p>
         </motion.div>
@@ -407,18 +410,18 @@ const OrganizationsList: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-20 text-center"
+          className="w-full backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-12 lg:p-20 text-center"
           style={{
             background: 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
           }}
         >
-          <div className="w-28 h-28 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-3xl flex items-center justify-center mx-auto mb-12 border border-emerald-400/30 shadow-2xl animate-bounce">
-            <span className="text-5xl">✨</span>
+          <div className="w-24 h-24 lg:w-28 lg:h-28 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-3xl flex items-center justify-center mx-auto mb-12 border border-emerald-400/30 shadow-2xl animate-bounce">
+            <span className="text-4xl lg:text-5xl">✨</span>
           </div>
-          <h2 className="text-4xl font-light mb-6 text-white bg-gradient-to-r from-white to-[#9b87f5] bg-clip-text text-transparent drop-shadow-2xl">
+          <h2 className="text-3xl lg:text-4xl font-light mb-6 text-white bg-gradient-to-r from-white to-[#9b87f5] bg-clip-text text-transparent drop-shadow-2xl">
             No Organizations Yet
           </h2>
-          <p className="text-xl text-white/50 font-light max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg lg:text-xl text-white/50 font-light max-w-2xl mx-auto leading-relaxed">
             Create your first organization for <strong className="text-[#9b87f5]">{tenantDisplayName}</strong> using the form above
           </p>
         </motion.div>
