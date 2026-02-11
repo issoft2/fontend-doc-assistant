@@ -57,6 +57,16 @@ const AdminLayout: React.FC = () => {
   const navItems = [
     { path: '/chat', label: 'Chat with Assistant' },
     { path: '/admin/ingest', label: 'Ingest & Configuration' },
+      ...(user?.role === 'vendor' ? [{ path: '/admin/tenant-config', label: 'Configure Tenant' }] : []), // ✅ NEW VENDOR-ONLY
+
+      // ✅ NEW TENANTS LINK - Vendor + Admin roles only
+      { 
+        path: '/admin/tenants', 
+        label: '📋 Tenants', 
+        roles: ['vendor', 'group_admin', 'gmd', 'group_hr', 'group_finance']
+      },
+      
+
     { path: '/admin/companies', label: 'Companies & Collections' },
     { path: '/admin/users', label: 'Users' },
   ];
@@ -73,7 +83,7 @@ const AdminLayout: React.FC = () => {
               <span className="text-white font-bold text-sm">OKA</span>
             </div>
             <span className="text-lg font-semibold truncate">
-              Organization Knowledge Assistant
+              Knowledgebase Assistant
             </span>
           </div>
 
@@ -147,7 +157,7 @@ const AdminLayout: React.FC = () => {
                 <span className="text-white font-bold text-xs">OKA</span>
               </div>
               <span className="text-sm font-semibold truncate">
-                Organization Knowledge Assistant
+                Knowledgebase Assistant
               </span>
             </div>
 
