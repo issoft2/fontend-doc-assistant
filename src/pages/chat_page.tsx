@@ -48,7 +48,68 @@ const ChatPage: React.FC = () => {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceName, setSelectedVoiceName] = useState('');
 
-  const InputForm: React.FC<any> = () => null;
+const InputForm: React.FC<{
+  question: string;
+  onQuestionChange: (text: string) => void;
+  suggestions: string[];
+  isSubmitDisabled: boolean;
+  isStreaming: boolean;
+  onAsk: () => void;
+  onSuggestionClick: (suggestion: string) => void;
+  placeholder: string;
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+}> = ({
+  question,
+  onQuestionChange,
+  suggestions,
+  isSubmitDisabled,
+  isStreaming,
+  onAsk,
+  onSuggestionClick,
+  placeholder,
+  textareaRef,
+  handleKeyDown
+}) => (
+  <div className="p-6 border-t border-slate-800/50 bg-gradient-to-r from-slate-900/80 to-slate-950/80 backdrop-blur-sm">
+    <div className="max-w-4xl mx-auto">
+      <div className="flex gap-4 items-end">
+        <textarea
+          ref={textareaRef}
+          value={question}
+          onChange={(e) => onQuestionChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={isStreaming}
+          rows={1}
+          className="flex-1 resize-none bg-slate-800/50 border border-slate-700/50 rounded-2xl px-5 py-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent min-h-[52px] max-h-32"
+        />
+        <button
+          onClick={onAsk}
+          disabled={isSubmitDisabled}
+          className="w-14 h-14 flex items-center justify-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-2xl shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:shadow-none transition-all duration-200 flex-shrink-0"
+        >
+          {isStreaming ? '⏳' : '➤'}
+        </button>
+      </div>
+      
+      {suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-4">
+          {suggestions.slice(0, 3).map((suggestion, i) => (
+            <button
+              key={i}
+              onClick={() => onSuggestionClick(suggestion)}
+              className="px-4 py-2 text-xs bg-slate-800/70 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl transition-all duration-200"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
  
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -427,8 +488,12 @@ const ChatPage: React.FC = () => {
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {/* Messages */}
             {isEmptyState ? (
-              <EmptyState onQuestionSet={setQuestion} />
-            ) : (
+            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-400">
+              <div className="text-3xl mb-6 opacity-75">💬</div>
+              <h2 className="text-2xl font-bold text-slate-200 mb-4">Ask your first question</h2>
+              <p className="text-lg max-w-md">Try "Show me Q1 2024 revenue" or "Compare policies vs last year"</p>
+            </div>
+          )  : (
               
               <section className="flex-1 overflow-y-auto p-6 space-y-6 pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
                 <AnimatePresence>
@@ -642,7 +707,7 @@ const AssistantMessage: React.FC<{ msg: ChatMessage }> = ({ msg }) => (
             // onClick={() => speak(msg.text)}
           >
             <Volume2 className="h-3 w-3" />
-            Listen
+            {/* Listen */}
           </button>
         </div>
       </div>
