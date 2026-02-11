@@ -1,4 +1,4 @@
-// SendIcon, Loader2,  useTransition
+// SendIcon, Loader2, 
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 // import { useNavigate } from 'react-router-dom';
@@ -516,7 +516,7 @@ const UserMessage: React.FC<{
   onStartEditing: (msg: ChatMessage) => void;
   onCancelEditing: () => void;
   onResendEdited: (msg: ChatMessage) => Promise<void>;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 }> = ({
   msg,
   editingMessageId,
