@@ -639,7 +639,7 @@ const AssistantMessage: React.FC<{ msg: ChatMessage }> = ({ msg }) => (
           <button
             type="button"
             className="text-[11px] px-2 py-1 rounded-full bg-slate-900/70 border border-slate-700/70 text-slate-200 hover:bg-slate-800 flex items-center gap-1"
-            onClick={() => speak(msg.text)}
+            // onClick={() => speak(msg.text)}
           >
             <Volume2 className="h-3 w-3" />
             Listen
