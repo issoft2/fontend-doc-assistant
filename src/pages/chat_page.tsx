@@ -113,7 +113,8 @@ const InputForm: React.FC<{
  
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);  // FIXED
+
 
   const {
     answer: streamedAnswer,
