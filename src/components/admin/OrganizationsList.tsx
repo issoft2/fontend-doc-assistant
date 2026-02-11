@@ -78,20 +78,21 @@ const OrganizationsList: React.FC = () => {
     loadCompanies();
   }, [loadCompanies]);
 
-  const loadOrganizations = useCallback(async (tenantId: string) => {
-    if (!tenantId) return;
-    setLoading(true);
-    setOrgError('');
-    try {
-      const res = await fetchOrganizations(tenantId);
-      const payload = Array.isArray(res) ? res : res?.data;
-      setOrganizations(payload || []);
-    } catch (e: any) {
-      setOrgError(e?.response?.data?.detail || 'Failed to load organizations.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+ const loadOrganizations = useCallback(async (tenantId: string) => {
+      if (!tenantId) return;
+      setLoading(true);
+      setOrgError('');
+      try {
+        const res: any = await fetchOrganizations(tenantId); // ✅ FIX: Type as any
+        const payload = Array.isArray(res) ? res : res?.data || res || [];
+        setOrganizations(Array.isArray(payload) ? payload : []);
+      } catch (e: any) {
+        setOrgError(e?.response?.data?.detail || 'Failed to load organizations.');
+      } finally {
+        setLoading(false);
+      }
+    }, []);
+
 
   const handleCreateOrganization = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
