@@ -9,24 +9,13 @@ import EmptyState from '@/components/EmptyState';
 import { useAuthStore } from '../useAuthStore'; // ✅ FIXED: Your original import path
 import { listConversations, getConversation, deleteConversation } from '../lib/api';
 import { useQueryStream, type ChartSpec } from '@/composables/useQueryStream';
+import { ChatMessage, Conversation } from './chat/types'
 
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  sources?: string[];
-  chart_specs?: ChartSpec[];
-}
 
-interface Conversation {
-  conversation_id: string;
-  first_question: string;
-  last_activity_at: string;
-}
 
 // ✅ FIXED: Proper ref types - non-nullable as passed to components
 const ChatPage: React.FC = () => {
-  const { accessToken, user } = useAuthStore();
+  const { accessToken, user, logout } = useAuthStore();
   const isAuthenticated = !!accessToken && !!user;
 
   // Core UI state
@@ -329,6 +318,11 @@ const ChatPage: React.FC = () => {
             selectedVoiceName={selectedVoiceName}
             onVoiceChange={setSelectedVoiceName}
             onStopSpeaking={stopSpeaking}
+              onLogout={() => {  // ✅ NEW: Logout handler
+            if (window.confirm('Are you sure you want to logout?')) {
+              logout();  // From useAuthStore
+            }
+          }}
           />
           
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -470,7 +464,8 @@ const Header: React.FC<{
   selectedVoiceName: string;
   onVoiceChange: (voice: string) => void;
   onStopSpeaking: () => void;
-}> = ({ isSpeaking, voices, selectedVoiceName, onVoiceChange, onStopSpeaking }) => (
+  onLogout: () => void;  // ✅ NEW: Logout prop
+}> = ({ isSpeaking, voices, selectedVoiceName, onVoiceChange, onStopSpeaking, onLogout }) => (
   <header className="p-6 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm shrink-0">
     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
       <div className="min-w-0">
@@ -488,6 +483,17 @@ const Header: React.FC<{
         onVoiceChange={onVoiceChange}
         onStopSpeaking={onStopSpeaking}
       />
+      {/* ✅ NEW: Logout Button */}
+        <button
+          onClick={onLogout}
+          className="px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl transition-all duration-200 flex items-center gap-2 group"
+          title="Logout"
+        >
+          <svg className="w-4 h-4 group-hover:-rotate-12 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Logout
+        </button>
     </div>
   </header>
 );
