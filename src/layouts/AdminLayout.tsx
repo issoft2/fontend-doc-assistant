@@ -42,7 +42,7 @@ const AdminLayout: React.FC = () => {
     ...(user?.role === 'vendor' ? [{ path: '/admin/tenant-config', label: '➕ New Tenant', icon: '➕' }] : []),
     { path: '/admin/tenants', label: '📋 Tenants', icon: '📋', roles: ['vendor', 'group_admin', 'gmd', 'group_hr', 'group_finance'] },
     { path: '/admin/organizations', label: '🏢 Organizations', icon: '🏢', roles: ['vendor', 'group_admin', 'group_hr', 'group_finance'] },
-    { path: '/admin/companies', label: '🏭 Companies & Collections', icon: '🏭' },
+     { path: '/admin/collections', label: '📂 Collections', icon: '📂' },
     { path: '/admin/users', label: '👥 Users', icon: '👥' },
   ];
 
