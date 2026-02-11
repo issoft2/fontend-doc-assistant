@@ -10,6 +10,8 @@ import NotFound from "./pages/notFound";
 import TenantConfigForm from "./components/admin/TenantConfigurationForm";
 import TenantsList from "./components/admin/TenantsList";
 import OrganizationsList from "./components/admin/OrganizationsList"
+import CollectionList from "./components/admin/CollectionsList";
+import UserList from "./components/admin/UserList";
 // import Dashboard from "./pages/admin_dashboard"; // ✅ Uncommented
 // import TenantForm from "./pages/TenantForm"; // ✅ Add your pages
 
@@ -42,6 +44,8 @@ const App = () => {
         <Route path="tenant-config" element={<TenantConfigForm />} /> 
         <Route path="tenants" element={<TenantsList />} />  
         <Route path="organizations" element={<OrganizationsList />} />  
+        <Route path="collections" element={<CollectionList />} />
+        <Route path="users" element={<UserList />} />
 
         {/* <Route index element={<Dashboard />} /> */}
         {/* <Route path="ingest" element={<Dashboard />} />  */}
