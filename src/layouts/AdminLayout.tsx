@@ -1,4 +1,4 @@
-// src/layouts/AdminLayout.tsx - PERFECTLY FIXED VERSION
+// src/layouts/AdminLayout.tsx - MOBILE PERFECT VERSION
 import React, { useState, useCallback } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -39,7 +39,7 @@ const AdminLayout: React.FC = () => {
   const navItems = [
     { path: '/chat', label: '💬 Chat with Assistant', icon: '💬' },
     { path: '/admin/ingest', label: '📥 Ingest & Configuration', icon: '📥' },
-    ...(user?.role === 'vendor' ? [{ path: '/admin/tenant-config', label: '⚙️ Configure Tenant', icon: '⚙️' }] : []),
+    ...(user?.role === 'vendor' ? [{ path: '/admin/tenant-config', label: '➕ New Tenant', icon: '➕' }] : []),
     { path: '/admin/tenants', label: '📋 Tenants', icon: '📋', roles: ['vendor', 'group_admin', 'gmd', 'group_hr', 'group_finance'] },
     { path: '/admin/organizations', label: '🏢 Organizations', icon: '🏢', roles: ['vendor', 'group_admin', 'group_hr', 'group_finance'] },
     { path: '/admin/companies', label: '🏭 Companies & Collections', icon: '🏭' },
@@ -64,82 +64,84 @@ const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen font-light text-white antialiased flex flex-row bg-[#0a0613]">
-      {/* 🎨 BACKGROUND - FIXED LOWEST Z-INDEX */}
+    <div className="min-h-screen font-[500] text-white antialiased flex flex-col lg:flex-row bg-[#0a0613]/95">
+      {/* 🎨 ENHANCED BACKGROUND */}
       <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none">
         <div 
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-25"
           style={{
-            background: 'linear-gradient(135deg, #0a0613 0%, #150d27 50%, #0a0613 100%)',
+            background: 'linear-gradient(135deg, #0a0613 0%, #150d27 50%, #1a0f3a 100%)',
           }}
         />
-        <div className="absolute top-20 right-20 w-64 h-64 bg-[#9b87f5]/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#9b87f5]/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-24 right-24 w-72 h-72 lg:w-96 lg:h-96 bg-[#9b87f5]/15 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-24 left-24 w-80 h-80 lg:w-96 lg:h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
       </div>
 
-      {/* SIDEBAR - Fixed Width, Proper Z-Index */}
+      {/* DESKTOP SIDEBAR - HIDDEN ON MOBILE */}
       {canSeeAdmin && (
         <motion.aside 
           initial={{ x: -300 }}
           animate={{ x: 0 }}
-          className="w-72 flex-shrink-0 flex flex-col z-40 shadow-2xl backdrop-blur-xl border-r border-white/5 isolate"
+          className="hidden lg:flex w-80 lg:w-96 flex-shrink-0 flex flex-col z-40 shadow-2xl backdrop-blur-2xl border-r border-white/10 isolate"
           style={{
-            background: 'linear-gradient(180deg, rgba(10, 6, 19, 0.98) 0%, rgba(21, 13, 39, 0.98) 100%)',
+            background: 'linear-gradient(180deg, rgba(10, 6, 19, 0.98) 0%, rgba(21, 13, 39, 0.98) 70%, rgba(155, 135, 245, 0.06) 100%)',
           }}
         >
           {/* Logo Header */}
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-6 border-b border-white/5 backdrop-blur-sm flex-shrink-0"
+            className="p-8 border-b border-white/10 backdrop-blur-sm flex-shrink-0"
             style={{
-              background: 'linear-gradient(135deg, rgba(155, 135, 245, 0.1) 0%, transparent 100%)',
+              background: 'linear-gradient(135deg, rgba(155, 135, 245, 0.15) 0%, rgba(155, 135, 245, 0.05) 100%)',
             }}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <motion.div 
-                className="h-12 w-12 bg-gradient-to-r from-[#9b87f5] to-purple-600 rounded-2xl shadow-xl flex items-center justify-center p-2"
-                animate={{ scale: [1, 1.05, 1], rotate: [0, 2, -2, 0] }}
+                className="h-16 w-16 lg:h-20 lg:w-20 bg-gradient-to-r from-[#9b87f5] via-purple-600 to-indigo-600 rounded-3xl shadow-2xl flex items-center justify-center p-3 border border-white/20"
+                animate={{ scale: [1, 1.05, 1], rotate: [0, 1, -1, 0] }}
                 transition={{ duration: 4, repeat: Infinity, repeatType: "mirror" }}
               >
-                <img src={logo} alt="OKA" className="w-8 h-8 rounded-xl object-cover opacity-90" />
+                <img src={logo} alt="OKA" className="w-10 h-10 lg:w-12 lg:h-12 rounded-2xl object-cover opacity-95" />
               </motion.div>
               <div>
-                <h1 className="text-xl font-light tracking-wide">Knowledgebase</h1>
-                <p className="text-xs text-[#9b87f5] font-light opacity-80">AI Assistant</p>
+                <h1 className="text-2xl lg:text-3xl font-[600] tracking-tight bg-gradient-to-r from-white to-[#9b87f5] bg-clip-text text-transparent drop-shadow-lg">
+                  Knowledgebase
+                </h1>
+                <p className="text-sm lg:text-base text-[#9b87f5] font-light opacity-90 mt-1">AI Assistant Platform</p>
               </div>
             </div>
           </motion.div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          <nav className="flex-1 p-8 space-y-4 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
             {visibleNavItems.map((item, index) => (
               <motion.button
                 key={item.path}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.06 }}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "group relative w-full text-left rounded-2xl px-4 py-3 font-light text-sm transition-all duration-300 flex items-center gap-3 overflow-hidden shadow-lg border border-white/5 backdrop-blur-sm hover:shadow-[0_0_20px_rgba(155,_135,_245,_0.3)] hover:border-[#9b87f5]/30",
+                  "group relative w-full text-left rounded-3xl px-6 py-5 lg:py-6 font-[500] text-lg lg:text-xl leading-relaxed transition-all duration-400 flex items-center gap-4 h-20 lg:h-24 overflow-hidden shadow-xl border border-white/10 backdrop-blur-xl hover:shadow-[0_20px_40px_rgba(155,135,245,0.3)] hover:border-[#9b87f5]/40 hover:scale-[1.02]",
                   isActive(item.path)
-                    ? "bg-gradient-to-r from-[#9b87f5]/20 to-purple-600/20 text-white shadow-[0_0_25px_rgba(155,_135,_245,_0.4)] border-[#9b87f5]/40 bg-[#9b87f5]/10"
-                    : "text-white/70 hover:text-white hover:bg-white/5"
+                    ? "bg-gradient-to-r from-[#9b87f5]/25 via-purple-600/20 to-indigo-600/20 text-white shadow-[0_20px_50px_rgba(155,135,245,0.5)] border-[#9b87f5]/50 !scale-[1.02]"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
                 )}
               >
                 <span className={cn(
-                  "w-2.5 h-2.5 rounded-full shadow-sm flex-shrink-0",
+                  "w-4 h-4 lg:w-5 lg:h-5 rounded-2xl shadow-lg flex-shrink-0 transition-all duration-300",
                   isActive(item.path)
-                    ? "bg-gradient-to-r from-[#9b87f5] to-purple-500 shadow-[#9b87f5]/50"
-                    : "bg-white/30 group-hover:bg-[#9b87f5]/60"
+                    ? "bg-gradient-to-r from-[#9b87f5] to-purple-500 shadow-[#9b87f5]/60 scale-110"
+                    : "bg-white/30 group-hover:bg-[#9b87f5]/70 group-hover:scale-110"
                 )} />
-                <span>{item.icon} {item.label}</span>
+                <span className="truncate font-medium">{item.icon} {item.label}</span>
                 {isActive(item.path) && (
                   <motion.div
-                    className="absolute right-2 w-1 h-6 bg-gradient-to-b from-[#9b87f5] to-purple-500 rounded shadow-md"
-                    initial={{ scaleY: 0 }}
-                    animate={{ scaleY: 1 }}
-                    transition={{ duration: 0.3 }}
+                    className="absolute right-6 w-2 h-12 lg:h-16 bg-gradient-to-b from-[#9b87f5] via-purple-500 to-indigo-500 rounded-xl shadow-xl"
+                    initial={{ scaleY: 0, opacity: 0 }}
+                    animate={{ scaleY: 1, opacity: 1 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
                   />
                 )}
               </motion.button>
@@ -150,115 +152,146 @@ const AdminLayout: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-5 border-t border-white/5 backdrop-blur-sm flex-shrink-0"
+            className="p-8 border-t border-white/10 backdrop-blur-xl flex-shrink-0"
             style={{
-              background: 'linear-gradient(180deg, transparent 0%, rgba(155, 135, 245, 0.05) 100%)',
+              background: 'linear-gradient(180deg, rgba(155, 135, 245, 0.08) 0%, rgba(10, 6, 19, 0.95) 100%)',
             }}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs">
-                <span className="px-2 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-300 border border-emerald-400/30 font-mono font-light">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-2 min-w-0">
+                <span className="px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-600/20 text-emerald-200 border border-emerald-400/40 font-mono font-medium text-base lg:text-lg shadow-lg backdrop-blur-sm">
                   {roleLabel}
                 </span>
-                <span className="text-white/40 font-light">Admin</span>
+                <span className="text-white/70 font-medium text-sm lg:text-base">Admin Dashboard</span>
               </div>
               <motion.button
                 onClick={handleLogout}
-                className="relative overflow-hidden rounded-full border border-white/10 bg-gradient-to-b from-white/5 to-white/2 px-3 py-2 text-white/70 shadow-lg hover:shadow-[0_0_20px_rgba(155,_135,_245,_0.3)] hover:border-[#9b87f5]/30 hover:text-white transition-all duration-300 group"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="p-4 rounded-3xl border-2 border-white/15 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl shadow-2xl hover:shadow-[0_20px_40px_rgba(155,135,245,0.4)] hover:border-[#9b87f5]/40 hover:bg-gradient-to-br hover:from-[#9b87f5]/20 hover:to-purple-600/20 hover:text-white transition-all duration-400 group"
+                whileHover={{ scale: 1.08, rotate: 2 }}
+                whileTap={{ scale: 0.96 }}
               >
-                <LogOut className="h-4 w-4 group-hover:-rotate-12 transition-transform duration-200" />
+                <LogOut className="h-6 w-6 lg:h-7 lg:w-7 group-hover:-rotate-180 transition-all duration-500" />
               </motion.button>
             </div>
           </motion.div>
         </motion.aside>
       )}
 
-      {/* MAIN CONTENT AREA - PERFECT Z-INDEX & ISOLATION */}
-      <div className="flex-1 flex flex-col min-h-screen isolate relative z-10">
-        {/* Header */}
+      {/* MAIN CONTENT AREA - FULL WIDTH ON MOBILE */}
+      <div className="flex-1 flex flex-col min-h-screen isolate relative z-10 w-full lg:ml-0">
+        {/* Enhanced Header */}
         <motion.header 
           initial={{ y: -100 }}
           animate={{ y: 0 }}
-          className="backdrop-blur-xl bg-white/5 border-b border-white/5 shadow-2xl sticky top-0 z-30 flex-shrink-0 isolate"
+          className="backdrop-blur-2xl bg-white/8 border-b border-white/10 shadow-2xl sticky top-0 z-30 flex-shrink-0 isolate w-full"
           style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
           }}
         >
-          <div className="px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="px-6 lg:px-12 py-6 flex items-center justify-between w-full">
+            <div className="flex items-center gap-6">
               {canSeeAdmin && (
                 <motion.button
-                  className="p-2 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:shadow-lg hover:shadow-[#9b87f5]/20 transition-all duration-200 md:hidden"
+                  className="p-3 lg:p-4 rounded-3xl border border-white/15 bg-white/10 backdrop-blur-xl hover:bg-white/20 hover:shadow-xl hover:shadow-[#9b87f5]/30 transition-all duration-300"
                   onClick={toggleMobileNav}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                  {mobileNavOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </motion.button>
               )}
               <motion.div 
-                className="font-light text-2xl bg-gradient-to-r from-[#9b87f5] via-purple-500 to-indigo-500 bg-clip-text text-transparent drop-shadow-lg"
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+                className="font-[600] text-2xl lg:text-4xl tracking-tight bg-gradient-to-r from-[#9b87f5] via-purple-500 to-indigo-500 bg-clip-text text-transparent drop-shadow-2xl"
+                animate={{ scale: [1, 1.03, 1] }}
+                transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
               >
                 Admin Console
               </motion.div>
             </div>
+            <div className="flex items-center gap-4 hidden lg:block">
+              <div className="text-right text-sm lg:text-base text-white/60 font-medium">
+                Welcome back, <span className="text-[#9b87f5] font-semibold">{user?.email?.split('@')[0] || 'Admin'}</span>
+              </div>
+            </div>
           </div>
         </motion.header>
 
-        {/* Mobile Nav Overlay */}
+        {/* MOBILE NAV OVERLAY - FULLSCREEN + HIGHER Z-INDEX */}
         {canSeeAdmin && mobileNavOpen && (
           <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="md:hidden backdrop-blur-xl bg-[#0a0613]/95 border-b border-white/5 shadow-2xl flex-shrink-0 z-20 isolate"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="lg:hidden fixed inset-0 bg-[#0a0613]/98 backdrop-blur-2xl z-50 flex flex-col shadow-2xl"
             style={{
-              background: 'linear-gradient(180deg, rgba(10, 6, 19, 0.98) 0%, rgba(21, 13, 39, 0.98) 100%)',
+              background: 'linear-gradient(135deg, rgba(10, 6, 19, 0.98) 0%, rgba(21, 13, 39, 0.98) 100%)',
             }}
+            onClick={closeMobileNav}
           >
-            <div className="max-h-[70vh] overflow-y-auto p-4 space-y-2">
-              {visibleNavItems.map((item, index) => (
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 pt-20" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-8 pb-8 border-b border-white/10">
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 bg-gradient-to-r from-[#9b87f5] via-purple-600 to-indigo-600 rounded-3xl shadow-2xl flex items-center justify-center p-2.5 border border-white/20">
+                    <img src={logo} alt="OKA" className="w-9 h-9 rounded-2xl object-cover opacity-95" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-[600] bg-gradient-to-r from-white to-[#9b87f5] bg-clip-text text-transparent">
+                      Knowledgebase
+                    </h1>
+                    <p className="text-sm text-[#9b87f5] font-light">AI Assistant</p>
+                  </div>
+                </div>
                 <motion.button
-                  key={item.path}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => {
-                    navigate(item.path);
-                    closeMobileNav();
-                  }}
-                  className={cn(
-                    "group w-full text-left rounded-2xl px-6 py-4 font-light text-base transition-all duration-300 flex items-center gap-4 border border-white/10 backdrop-blur-sm hover:shadow-[0_0_20px_rgba(155,_135,_245,_0.3)] hover:border-[#9b87f5]/30",
-                    isActive(item.path)
-                      ? "bg-gradient-to-r from-[#9b87f5]/20 to-purple-600/20 text-white shadow-[0_0_25px_rgba(155,_135,_245,_0.4)] border-[#9b87f5]/40"
-                      : "text-white/80 hover:text-white hover:bg-white/10"
-                  )}
+                  onClick={closeMobileNav}
+                  className="p-3 rounded-3xl bg-white/10 backdrop-blur-xl hover:bg-white/20 transition-all duration-300"
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <span className={cn(
-                    "w-3 h-3 rounded-full shadow-sm flex-shrink-0",
-                    isActive(item.path)
-                      ? "bg-gradient-to-r from-[#9b87f5] to-purple-500 shadow-[#9b87f5]/50"
-                      : "bg-white/30 group-hover:bg-[#9b87f5]/60"
-                  )} />
-                  <span>{item.icon} {item.label}</span>
+                  <X className="h-7 w-7" />
                 </motion.button>
-              ))}
+              </div>
+
+              <div className="space-y-4">
+                {visibleNavItems.map((item, index) => (
+                  <motion.button
+                    key={item.path}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.06 }}
+                    onClick={() => {
+                      navigate(item.path);
+                      closeMobileNav();
+                    }}
+                    className={cn(
+                      "group w-full text-left rounded-3xl px-8 py-6 font-[500] text-xl leading-relaxed transition-all duration-400 flex items-center gap-6 h-24 shadow-xl border border-white/10 backdrop-blur-xl hover:shadow-[0_20px_40px_rgba(155,135,245,0.3)] hover:border-[#9b87f5]/40 hover:scale-[1.02]",
+                      isActive(item.path)
+                        ? "bg-gradient-to-r from-[#9b87f5]/25 via-purple-600/20 to-indigo-600/20 text-white shadow-[0_20px_50px_rgba(155,135,245,0.5)] border-[#9b87f5]/50 !scale-[1.02]"
+                        : "text-white/80 hover:text-white hover:bg-white/15"
+                    )}
+                  >
+                    <span className={cn(
+                      "w-6 h-6 rounded-2xl shadow-lg flex-shrink-0 transition-all duration-300",
+                      isActive(item.path)
+                        ? "bg-gradient-to-r from-[#9b87f5] to-purple-500 shadow-[#9b87f5]/60 scale-110"
+                        : "bg-white/30 group-hover:bg-[#9b87f5]/70 group-hover:scale-110"
+                    )} />
+                    <span className="font-semibold">{item.icon} {item.label}</span>
+                  </motion.button>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
 
-        {/* 🔥 MAIN CONTENT - PERFECTLY ISOLATED FOR PAGES */}
+        {/* MAIN CONTENT - CLEAN TRANSPARENT MOBILE */}
         <motion.main 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex-1 overflow-y-auto p-6 lg:p-12 isolate bg-transparent relative z-10"
+          transition={{ duration: 0.6 }}
+          className="flex-1 overflow-y-auto p-6 lg:p-12 xl:p-16 isolate bg-transparent/0 relative z-10 w-full scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent/20 lg:ml-0"
           style={{ minHeight: 0 }}
         >
-          <Outlet /> {/* 🎉 Your pages render HERE perfectly! */}
+          <Outlet />
         </motion.main>
       </div>
     </div>
