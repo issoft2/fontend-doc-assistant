@@ -1,9 +1,9 @@
 // stores/useAuthStore.ts
 'use client'; // Add this for Next.js
-
+// apiHeartbeat
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { setAuthToken, removeAuthToken, login as apiLogin, me as apiMe, apiLogout, apiHeartbeat } from './lib/api';
+import { setAuthToken, removeAuthToken, login as apiLogin, me as apiMe, apiLogout } from './lib/api';
 
 export interface MeResponse {
   id: number;
