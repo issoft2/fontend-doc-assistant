@@ -79,10 +79,14 @@ const InputForm: React.FC<{
           value={question}
           onChange={(e) => onQuestionChange(e.target.value)}
           onKeyDown={handleKeyDown}
+          onInput={(e) => {  
+            e.currentTarget.style.height = 'auto';
+            e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+          }}
           placeholder={placeholder}
           disabled={isStreaming}
           rows={1}
-          className="flex-1 resize-none bg-slate-800/50 border border-slate-700/50 rounded-2xl px-5 py-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent min-h-[52px] max-h-32"
+          className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-2xl px-5 py-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent min-h-[52px] max-h-[200px]"
         />
         <button
           onClick={onAsk}
@@ -376,8 +380,7 @@ const InputForm: React.FC<{
     <div className="h-screen w-screen bg-gradient-to-br from-slate-950 via-black to-slate-900 flex overflow-hidden">
       <div className="h-full w-full flex flex-col lg:flex-row">
         {/* Sidebar - Full height, hidden on mobile */}
-        <aside className="bg-slate-900/95 backdrop-blur-xl border-r border-slate-800/50 flex flex-col w-full lg:w-80 lg:max-w-sm shadow-2xl hidden lg:flex">
-          <div className="p-4 flex items-center justify-between border-b border-slate-800/70 shrink-0">
+        <aside className="w-full lg:w-80 lg:max-w-sm bg-slate-900/95 backdrop-blur-xl border-r border-slate-800/50 flex flex-col shadow-2xl hidden lg:flex">          <div className="p-4 flex items-center justify-between border-b border-slate-800/70 shrink-0">
             <h2 className="text-sm font-bold bg-gradient-to-r from-slate-100 to-slate-200 bg-clip-text text-transparent">
               Conversations
             </h2>
