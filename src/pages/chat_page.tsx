@@ -1,14 +1,18 @@
-import { v4 as uuidv4 } from 'uuid';  // ✅ ADD THIS LINE
-import React, { useState, useEffect, useRef, useCallback, useTransition, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+// SendIcon, Loader2,  useTransition
+import { v4 as uuidv4 } from 'uuid';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+// import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../useAuthStore'; // Adjust path as neededimport { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SendIcon, Loader2, Mic, Trash2, Edit3, Volume2, X } from 'lucide-react';
+import {  Mic, Trash2, Edit3, Volume2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MarkdownText from '../components/MarkdownText';
 import ChartRenderer from '../components/ChartRenderer';
 import { listConversations, getConversation, deleteConversation } from '../lib/api';
 import { useQueryStream, type ChartSpec } from '@/composables/useQueryStream';
+import EmptyState  from '../components/EmptyState';
+
+
 
 interface ChatMessage {
   id: string;
@@ -422,6 +426,7 @@ const ChatPage: React.FC = () => {
             {isEmptyState ? (
               <EmptyState onQuestionSet={setQuestion} />
             ) : (
+              
               <section className="flex-1 overflow-y-auto p-6 space-y-6 pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
                 <AnimatePresence>
                   {messages.map((msg, idx) => (
@@ -488,6 +493,19 @@ const ChatPage: React.FC = () => {
     </div>
   );
 };
+
+
+// In UserMessage component:
+interface UserMessageProps {
+  msg: ChatMessage;
+  editingMessageId: string | null;
+  editBuffer: string;
+  onEditBufferChange: (text: string) => void;
+  onStartEditing: (msg: ChatMessage) => void;
+  onCancelEditing: () => void;
+  onResendEdited: (msg: ChatMessage) => Promise<void>;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>; // ✅ FIXED: nullable + optional
+}
 
 // User Message Component
 const UserMessage: React.FC<{

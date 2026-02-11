@@ -1,7 +1,6 @@
-'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+
 
 export interface ChartSpec {
   chart_type: 'line' | 'bar' | 'area';
