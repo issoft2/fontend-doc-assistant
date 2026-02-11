@@ -57,7 +57,7 @@ const InputForm: React.FC<{
   onAsk: () => void;
   onSuggestionClick: (suggestion: string) => void;
   placeholder: string;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }> = ({
   question,
@@ -585,7 +585,7 @@ const UserMessage: React.FC<{
   onStartEditing: (msg: ChatMessage) => void;
   onCancelEditing: () => void;
   onResendEdited: (msg: ChatMessage) => Promise<void>;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
 }> = ({
   msg,
   editingMessageId,
