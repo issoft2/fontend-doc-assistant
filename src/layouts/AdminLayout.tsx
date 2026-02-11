@@ -65,7 +65,12 @@ const AdminLayout: React.FC = () => {
         label: '📋 Tenants', 
         roles: ['vendor', 'group_admin', 'gmd', 'group_hr', 'group_finance']
       },
-      
+
+      { 
+      path: '/admin/organizations', 
+      label: '🏢 Organizations', 
+      roles: ['vendor', 'group_admin', 'group_hr', 'group_finance'] 
+    },
 
     { path: '/admin/companies', label: 'Companies & Collections' },
     { path: '/admin/users', label: 'Users' },
