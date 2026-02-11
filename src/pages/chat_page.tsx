@@ -1,18 +1,15 @@
-// SendIcon, Loader2, 
+// @/pages/ChatPage.tsx
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-// import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../useAuthStore'; // Adjust path as neededimport { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
-import {  Mic, Trash2, Edit3, Volume2, X } from 'lucide-react';
+import { Mic, Trash2, Edit3, Volume2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import MarkdownText from '../components/MarkdownText';
-import ChartRenderer from '../components/ChartRenderer';
-import { listConversations, getConversation, deleteConversation } from '../lib/api';
+import MarkdownText from '@/components/MarkdownText';
+import ChartRenderer from '@/components/ChartRenderer';
+import EmptyState from '@/components/EmptyState';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { listConversations, getConversation, deleteConversation } from '@/lib/api';
 import { useQueryStream, type ChartSpec } from '@/composables/useQueryStream';
-import EmptyState  from '../components/EmptyState';
-
-
 
 interface ChatMessage {
   id: string;
@@ -29,96 +26,29 @@ interface Conversation {
 }
 
 const ChatPage: React.FC = () => {
-  // Auth hook
   const { accessToken, user } = useAuthStore();
   const isAuthenticated = !!accessToken && !!user;
-  const authLoading = false; // Zustand loads instantly from storage
 
-  // UI state
+  // Core UI state
   const [question, setQuestion] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [editBuffer, setEditBuffer] = useState('');
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationId, setConversationId] = useState(() => uuidv4());
   const [selectedConversationId, setSelectedConversationId] = useState(conversationId);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  
+  // Interaction state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [editBuffer, setEditBuffer] = useState('');
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  
+  // TTS state
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceName, setSelectedVoiceName] = useState('');
 
-const InputForm: React.FC<{
-  question: string;
-  onQuestionChange: (text: string) => void;
-  suggestions: string[];
-  isSubmitDisabled: boolean;
-  isStreaming: boolean;
-  onAsk: () => void;
-  onSuggestionClick: (suggestion: string) => void;
-  placeholder: string;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
-}> = ({
-  question,
-  onQuestionChange,
-  suggestions,
-  isSubmitDisabled,
-  isStreaming,
-  onAsk,
-  onSuggestionClick,
-  placeholder,
-  textareaRef,
-  handleKeyDown
-}) => (
-  <div className="p-6 border-t border-slate-800/50 bg-gradient-to-r from-slate-900/80 to-slate-950/80 backdrop-blur-sm">
-    <div className="max-w-4xl mx-auto">
-      <div className="flex gap-4 items-end">
-        <textarea
-          ref={textareaRef}
-          value={question}
-          onChange={(e) => onQuestionChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onInput={(e) => {  
-            e.currentTarget.style.height = 'auto';
-            e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-          }}
-          placeholder={placeholder}
-          disabled={isStreaming}
-          rows={1}
-          className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-2xl px-5 py-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent min-h-[52px] max-h-[200px]"
-        />
-        <button
-          onClick={onAsk}
-          disabled={isSubmitDisabled}
-          className="w-14 h-14 flex items-center justify-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-2xl shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:shadow-none transition-all duration-200 flex-shrink-0"
-        >
-          {isStreaming ? '⏳' : '➤'}
-        </button>
-      </div>
-      
-      {suggestions.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {suggestions.slice(0, 3).map((suggestion, i) => (
-            <button
-              key={i}
-              onClick={() => onSuggestionClick(suggestion)}
-              className="px-4 py-2 text-xs bg-slate-800/70 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl transition-all duration-200"
-            >
-              {suggestion}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  </div>
-);
-
- 
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);  // FIXED
-
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     answer: streamedAnswer,
@@ -130,23 +60,6 @@ const InputForm: React.FC<{
     stopStream,
   } = useQueryStream();
 
-  // Auth guard
-
-  // Loading screen
-  if (authLoading) {
-    return (
-      <div className="h-screen w-screen bg-gradient-to-br from-slate-950 via-black to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) return null;
-
-  // Memoized values
   const isSubmitDisabled = useMemo(
     () => loading || isStreaming || !question.trim(),
     [loading, isStreaming, question]
@@ -155,10 +68,14 @@ const InputForm: React.FC<{
   const lastMessage = useMemo(() => messages[messages.length - 1], [messages]);
   const isEmptyState = messages.length === 0;
 
-  // Consolidated streaming effects
+  // Auth guard
+  if (!isAuthenticated) return null;
+
+  // Stream effects
   useEffect(() => {
-    if (streamStatus?.startsWith("You don't have access") || streamStatus?.startsWith("You don't have permission")) {
-      setError(streamStatus);
+    if (streamStatus?.startsWith("You don't have access") || 
+        streamStatus?.startsWith("You don't have permission")) {
+      setError(streamStatus || 'Access denied');
       return;
     }
 
@@ -169,7 +86,6 @@ const InputForm: React.FC<{
     }
   }, [streamStatus, streamedAnswer, lastMessage?.role, messages.length]);
 
-  // Handle chart specs
   useEffect(() => {
     if (chartSpec?.length && lastMessage?.role === 'assistant') {
       setMessages(prev => {
@@ -192,7 +108,7 @@ const InputForm: React.FC<{
     scrollToBottom();
   }, [messages.length, scrollToBottom]);
 
-  // Load TTS voices
+  // TTS voices
   useEffect(() => {
     if (!('speechSynthesis' in window)) return;
 
@@ -213,7 +129,7 @@ const InputForm: React.FC<{
     };
   }, [selectedVoiceName]);
 
-  // Load conversations
+  // Conversations
   const loadConversations = useCallback(async () => {
     try {
       const res = await listConversations();
@@ -340,23 +256,19 @@ const InputForm: React.FC<{
     await startStream({ question: newText, conversation_id: selectedConversationId });
   }, [editBuffer, isStreaming, messages, cancelEditing, stopStream, startStream, selectedConversationId]);
 
-  // FIXED onAsk - prevents blank page on Enter
   const onAsk = useCallback(async () => {
     const trimmedQuestion = question.trim();
     if (!trimmedQuestion || loading || isStreaming) return;
 
-    // Clear input FIRST
     const asked = trimmedQuestion;
     setQuestion('');
 
-    // Add messages optimistically
     const newUserMsg = { id: uuidv4(), role: 'user' as const, text: asked, sources: [] };
     const newAssistantMsg = { id: uuidv4(), role: 'assistant' as const, text: '', sources: [] };
     
     setMessages(prev => [...prev, newUserMsg, newAssistantMsg]);
     setError('');
 
-    // Start streaming AFTER state updates
     requestAnimationFrame(() => {
       startStream({ question: asked, conversation_id: conversationId });
     });
@@ -372,165 +284,45 @@ const InputForm: React.FC<{
   const onSuggestionClick = useCallback((suggestion: string) => {
     if (loading || isStreaming) return;
     setQuestion(suggestion);
-    // Use setTimeout to ensure state updates before onAsk
     setTimeout(() => onAsk(), 0);
   }, [loading, isStreaming, onAsk]);
 
   return (
     <div className="h-screen w-screen bg-gradient-to-br from-slate-950 via-black to-slate-900 flex overflow-hidden">
       <div className="h-full w-full flex flex-col lg:flex-row">
-        {/* Sidebar - Full height, hidden on mobile */}
-        <aside className="w-full lg:w-80 lg:max-w-sm bg-slate-900/95 backdrop-blur-xl border-r border-slate-800/50 flex flex-col shadow-2xl hidden lg:flex">          <div className="p-4 flex items-center justify-between border-b border-slate-800/70 shrink-0">
-            <h2 className="text-sm font-bold bg-gradient-to-r from-slate-100 to-slate-200 bg-clip-text text-transparent">
-              Conversations
-            </h2>
-            <button
-              className="text-xs font-medium text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-500/10 transition-all duration-200"
-              onClick={startNewConversation}
-            >
-              New Chat
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-2">
-            <AnimatePresence>
-              {Array.isArray(conversations) && conversations.length > 0 ? (
-                conversations.map((conv) => (
-                  <motion.div
-                    key={conv.conversation_id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    layout
-                    className={cn(
-                      "group/conversation w-full rounded-2xl p-3 border border-slate-800/50 hover:border-slate-700/70 hover:bg-slate-800/30 transition-all duration-200 flex items-start justify-between gap-3 text-left cursor-pointer",
-                      conv.conversation_id === selectedConversationId && 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-500/40 shadow-lg shadow-indigo-500/10'
-                    )}
-                    onClick={() => openConversation(conv.conversation_id)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-slate-100 truncate group-hover/conversation:text-white transition-colors">
-                        {conv.first_question || 'Untitled conversation'}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
-                        {formatDate(conv.last_activity_at)}
-                        {conv.conversation_id === selectedConversationId && (
-                          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      className="opacity-0 group-hover/conversation:opacity-100 p-1.5 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 ml-auto"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteConversation(conv.conversation_id);
-                      }}
-                      title="Delete conversation"
-                      aria-label="Delete conversation"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </motion.div>
-                ))
-              ) : (
-                <div className="text-center py-12 px-4">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-slate-800/50 rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </div>
-                  <p className="text-sm text-slate-500 font-medium">No conversations yet</p>
-                  <p className="text-xs text-slate-600 mt-1">Start a new chat to see it here</p>
-                </div>
-              )}
-            </AnimatePresence>
-          </div>
-        </aside>
-
-        {/* Main chat area - Full screen */}
+        <Sidebar 
+          conversations={conversations}
+          selectedConversationId={selectedConversationId}
+          onConversationSelect={openConversation}
+          onNewConversation={startNewConversation}
+          onDeleteConversation={onDeleteConversation}
+          formatDate={formatDate}
+        />
+        
         <main className="flex flex-col flex-1 bg-slate-900/95 backdrop-blur-xl overflow-hidden">
-          {/* Header */}
-          <header className="p-6 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm shrink-0">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-white via-slate-100 to-slate-200 bg-clip-text text-transparent mb-1">
-                  Ask your data. See it as charts.
-                </h1>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Ask in natural language. Answers stay within your company documents and can include tables and charts when relevant.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm text-slate-300 bg-slate-800/50 px-3 py-2 rounded-xl border border-slate-700/50">
-                  <Mic className={`w-4 h-4 ${isSpeaking ? 'text-emerald-400 animate-pulse' : 'text-indigo-400'}`} />
-                  <select
-                    value={selectedVoiceName}
-                    onChange={(e) => setSelectedVoiceName(e.target.value)}
-                    className="bg-transparent text-sm text-slate-200 border-0 outline-none cursor-pointer hover:text-white transition-colors"
-                    disabled={isSpeaking}
-                  >
-                    {voices.map((voice) => (
-                      <option key={voice.name} value={voice.name}>
-                        {voice.name}
-                      </option>
-                    ))}
-                  </select>
-                  {isSpeaking && (
-                    <button
-                      onClick={stopSpeaking}
-                      className="ml-2 p-1 rounded-lg hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                      title="Stop speaking"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </header>
-
+          <Header 
+            isSpeaking={isSpeaking}
+            voices={voices}
+            selectedVoiceName={selectedVoiceName}
+            onVoiceChange={setSelectedVoiceName}
+            onStopSpeaking={stopSpeaking}
+          />
+          
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {/* Messages */}
-            {isEmptyState ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-400">
-              <div className="text-3xl mb-6 opacity-75">💬</div>
-              <h2 className="text-2xl font-bold text-slate-200 mb-4">Ask your first question</h2>
-              <p className="text-lg max-w-md">Try "Show me Q1 2024 revenue" or "Compare policies vs last year"</p>
-            </div>
-          )  : (
-              
-              <section className="flex-1 overflow-y-auto p-6 space-y-6 pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
-                <AnimatePresence>
-                  {messages.map((msg, idx) => (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.2 }}
-                      className="group space-y-4"
-                    >
-                      {msg.role === 'user' ? (
-                        <UserMessage msg={msg} 
-                          editingMessageId={editingMessageId} 
-                          editBuffer={editBuffer}
-                          onEditBufferChange={setEditBuffer}
-                          onStartEditing={startEditing}
-                          onCancelEditing={cancelEditing}
-                          onResendEdited={resendEdited}
-                          textareaRef={textareaRef}
-                        />
-                      ) : (
-                        <AssistantMessage msg={msg} />
-                      )}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                <div ref={messagesEndRef} />
-              </section>
-            )}
-
-            {/* Input form */}
+            <MessagesArea
+              messages={messages}
+              isEmptyState={isEmptyState}
+              editingMessageId={editingMessageId}
+              editBuffer={editBuffer}
+              onEditBufferChange={setEditBuffer}
+              onStartEditing={startEditing}
+              onCancelEditing={cancelEditing}
+              onResendEdited={resendEdited}
+              onSpeak={speak}
+              textareaRef={textareaRef}
+              messagesEndRef={messagesEndRef}
+            />
+            
             <InputForm
               question={question}
               onQuestionChange={setQuestion}
@@ -539,25 +331,15 @@ const InputForm: React.FC<{
               isStreaming={isStreaming}
               onAsk={onAsk}
               onSuggestionClick={onSuggestionClick}
-              placeholder={isEmptyState ? 'Ask about your policies or financials. Try "Compare Q1 2023 vs 2024 as charts".' : 'Ask a follow-up or request a chart…'}
+              placeholder={isEmptyState 
+                ? 'Ask about your policies or financials. Try "Compare Q1 2023 vs 2024 as charts".' 
+                : 'Ask a follow-up or request a chart…'}
               textareaRef={textareaRef}
               handleKeyDown={handleKeyDown}
             />
-
-            {/* Error display */}
+            
             {error && (
-              <div className="p-4 border-t border-slate-800/50 bg-red-500/10 border-red-500/30 shrink-0">
-                <div className="text-sm text-red-300 flex items-center gap-2">
-                  <span>⚠️</span>
-                  {error}
-                  <button
-                    onClick={() => setError('')}
-                    className="ml-auto p-1 hover:bg-red-500/20 rounded-lg transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+              <ErrorBanner error={error} onDismiss={() => setError('')} />
             )}
           </div>
         </main>
@@ -566,30 +348,243 @@ const InputForm: React.FC<{
   );
 };
 
-
-// In UserMessage component:
-interface UserMessageProps {
-  msg: ChatMessage;
-  editingMessageId: string | null;
-  editBuffer: string;
-  onEditBufferChange: (text: string) => void;
-  onStartEditing: (msg: ChatMessage) => void;
-  onCancelEditing: () => void;
-  onResendEdited: (msg: ChatMessage) => Promise<void>;
-  textareaRef?: React.RefObject<HTMLTextAreaElement | null>; // ✅ FIXED: nullable + optional
-}
-
-// User Message Component
-const UserMessage: React.FC<{
-  msg: ChatMessage;
-  editingMessageId: string | null;
-  editBuffer: string;
-  onEditBufferChange: (text: string) => void;
-  onStartEditing: (msg: ChatMessage) => void;
-  onCancelEditing: () => void;
-  onResendEdited: (msg: ChatMessage) => Promise<void>;
-  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
+// Extracted Components
+const Sidebar: React.FC<{
+  conversations: Conversation[];
+  selectedConversationId: string;
+  onConversationSelect: (id: string) => void;
+  onNewConversation: () => void;
+  onDeleteConversation: (id: string) => void;
+  formatDate: (date?: string) => string;
 }> = ({
+  conversations,
+  selectedConversationId,
+  onConversationSelect,
+  onNewConversation,
+  onDeleteConversation,
+  formatDate
+}) => (
+  <aside className="w-full lg:w-80 lg:max-w-sm bg-slate-900/95 backdrop-blur-xl border-r border-slate-800/50 flex flex-col shadow-2xl hidden lg:flex">
+    <div className="p-4 flex items-center justify-between border-b border-slate-800/70 shrink-0">
+      <h2 className="text-sm font-bold bg-gradient-to-r from-slate-100 to-slate-200 bg-clip-text text-transparent">
+        Conversations
+      </h2>
+      <button
+        className="text-xs font-medium text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-500/10 transition-all duration-200"
+        onClick={onNewConversation}
+      >
+        New Chat
+      </button>
+    </div>
+
+    <div className="flex-1 overflow-y-auto p-2">
+      <AnimatePresence>
+        {conversations.length > 0 ? (
+          conversations.map((conv) => (
+            <ConversationItem
+              key={conv.conversation_id}
+              conversation={conv}
+              isSelected={conv.conversation_id === selectedConversationId}
+              onSelect={() => onConversationSelect(conv.conversation_id)}
+              onDelete={() => onDeleteConversation(conv.conversation_id)}
+              formatDate={formatDate}
+            />
+          ))
+        ) : (
+          <EmptyConversations />
+        )}
+      </AnimatePresence>
+    </div>
+  </aside>
+);
+
+const ConversationItem: React.FC<{
+  conversation: Conversation;
+  isSelected: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+  formatDate: (date?: string) => string;
+}> = ({ conversation, isSelected, onSelect, onDelete, formatDate }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -20 }}
+    layout
+    className={cn(
+      "group/conversation w-full rounded-2xl p-3 border border-slate-800/50 hover:border-slate-700/70 hover:bg-slate-800/30 transition-all duration-200 flex items-start justify-between gap-3 text-left cursor-pointer",
+      isSelected && 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-500/40 shadow-lg shadow-indigo-500/10'
+    )}
+    onClick={onSelect}
+  >
+    <div className="flex-1 min-w-0">
+      <div className="text-sm font-semibold text-slate-100 truncate group-hover/conversation:text-white transition-colors">
+        {conversation.first_question || 'Untitled conversation'}
+      </div>
+      <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+        {formatDate(conversation.last_activity_at)}
+        {isSelected && (
+          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+        )}
+      </div>
+    </div>
+    <button
+      className="opacity-0 group-hover/conversation:opacity-100 p-1.5 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 ml-auto"
+      onClick={(e) => {
+        e.stopPropagation();
+        onDelete();
+      }}
+      title="Delete conversation"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </motion.div>
+);
+
+const Header: React.FC<{
+  isSpeaking: boolean;
+  voices: SpeechSynthesisVoice[];
+  selectedVoiceName: string;
+  onVoiceChange: (voice: string) => void;
+  onStopSpeaking: () => void;
+}> = ({ isSpeaking, voices, selectedVoiceName, onVoiceChange, onStopSpeaking }) => (
+  <header className="p-6 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm shrink-0">
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="text-xl font-bold bg-gradient-to-r from-white via-slate-100 to-slate-200 bg-clip-text text-transparent mb-1">
+          Ask your data. See it as charts.
+        </h1>
+        <p className="text-sm text-slate-400 leading-relaxed">
+          Ask in natural language. Answers stay within your company documents and can include tables and charts when relevant.
+        </p>
+      </div>
+      <TTSControls
+        isSpeaking={isSpeaking}
+        voices={voices}
+        selectedVoiceName={selectedVoiceName}
+        onVoiceChange={onVoiceChange}
+        onStopSpeaking={onStopSpeaking}
+      />
+    </div>
+  </header>
+);
+
+const TTSControls: React.FC<{
+  isSpeaking: boolean;
+  voices: SpeechSynthesisVoice[];
+  selectedVoiceName: string;
+  onVoiceChange: (voice: string) => void;
+  onStopSpeaking: () => void;
+}> = ({ isSpeaking, voices, selectedVoiceName, onVoiceChange, onStopSpeaking }) => (
+  <div className="flex items-center gap-2 text-sm text-slate-300 bg-slate-800/50 px-3 py-2 rounded-xl border border-slate-700/50">
+    <Mic className={`w-4 h-4 ${isSpeaking ? 'text-emerald-400 animate-pulse' : 'text-indigo-400'}`} />
+    <select
+      value={selectedVoiceName}
+      onChange={(e) => onVoiceChange(e.target.value)}
+      className="bg-transparent text-sm text-slate-200 border-0 outline-none cursor-pointer hover:text-white transition-colors"
+      disabled={isSpeaking}
+    >
+      {voices.map((voice) => (
+        <option key={voice.name} value={voice.name}>
+          {voice.name}
+        </option>
+      ))}
+    </select>
+    {isSpeaking && (
+      <button
+        onClick={onStopSpeaking}
+        className="ml-2 p-1 rounded-lg hover:bg-red-500/20 hover:text-red-400 transition-colors"
+        title="Stop speaking"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    )}
+  </div>
+);
+
+const MessagesArea: React.FC<{
+  messages: ChatMessage[];
+  isEmptyState: boolean;
+  editingMessageId: string | null;
+  editBuffer: string;
+  onEditBufferChange: (text: string) => void;
+  onStartEditing: (msg: ChatMessage) => void;
+  onCancelEditing: () => void;
+  onResendEdited: (msg: ChatMessage) => Promise<void>;
+  onSpeak: (text: string) => void;
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
+}> = ({
+  messages,
+  isEmptyState,
+  editingMessageId,
+  editBuffer,
+  onEditBufferChange,
+  onStartEditing,
+  onCancelEditing,
+  onResendEdited,
+  onSpeak,
+  textareaRef,
+  messagesEndRef
+}) => (
+  <>
+    {isEmptyState ? (
+      <EmptyStateChat />
+    ) : (
+      <section className="flex-1 overflow-y-auto p-6 space-y-6 pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+        <AnimatePresence>
+          {messages.map((msg) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="group space-y-4"
+            >
+              {msg.role === 'user' ? (
+                <UserMessage
+                  msg={msg}
+                  editingMessageId={editingMessageId}
+                  editBuffer={editBuffer}
+                  onEditBufferChange={onEditBufferChange}
+                  onStartEditing={onStartEditing}
+                  onCancelEditing={onCancelEditing}
+                  onResendEdited={onResendEdited}
+                  textareaRef={textareaRef}
+                />
+              ) : (
+                <AssistantMessage msg={msg} onSpeak={onSpeak} />
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        <div ref={messagesEndRef} />
+      </section>
+    )}
+  </>
+);
+
+const EmptyStateChat: React.FC = () => (
+  <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-400">
+    <div className="text-3xl mb-6 opacity-75">💬</div>
+    <h2 className="text-2xl font-bold text-slate-200 mb-4">Ask your first question</h2>
+    <p className="text-lg max-w-md">Try "Show me Q1 2024 revenue" or "Compare policies vs last year"</p>
+  </div>
+);
+
+const EmptyConversations: React.FC = () => (
+  <div className="text-center py-12 px-4">
+    <div className="w-16 h-16 mx-auto mb-4 bg-slate-800/50 rounded-2xl flex items-center justify-center">
+      <svg className="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+    </div>
+    <p className="text-sm text-slate-500 font-medium">No conversations yet</p>
+    <p className="text-xs text-slate-600 mt-1">Start a new chat to see it here</p>
+  </div>
+);
+
+const UserMessage: React.FC<UserMessageProps> = ({
   msg,
   editingMessageId,
   editBuffer,
@@ -601,51 +596,13 @@ const UserMessage: React.FC<{
 }) => {
   if (editingMessageId === msg.id) {
     return (
-      <div className="flex justify-end">
-        <div className="relative max-w-2xl bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl rounded-br-sm p-5 shadow-xl">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-[11px] text-indigo-100/80">
-              <span className="inline-flex items-center gap-1">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M13.586 3.586a2 2 0 0 1 2.828 2.828l-8.5 8.5L5 15l.086-2.914 8.5-8.5z" />
-                  <path d="M4 16h12v2H4z" />
-                </svg>
-                Editing your question
-              </span>
-              <span className="text-slate-200/70">This will resend a new answer</span>
-            </div>
-            <textarea
-              ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
-              value={editBuffer}
-              onChange={(e) => onEditBufferChange(e.target.value)}
-              className="w-full min-h-[72px] max-h-40 resize-none rounded-2xl border-2 border-indigo-300/70 bg-slate-900/80 px-4 py-3 text-sm text-slate-50 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 shadow-lg transition-all duration-200"
-              rows={4}
-              placeholder="Update your question and click Resend"
-            />
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] text-indigo-100/80">
-                The original question remains visible above in the thread.
-              </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="px-3 py-1.5 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-100 border border-slate-600/60 transition-all duration-150"
-                  onClick={onCancelEditing}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="px-3 py-1.5 text-xs rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold shadow-sm transition-all duration-150"
-                  onClick={() => onResendEdited(msg)}
-                >
-                  Save & resend
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <EditingUserMessage
+        editBuffer={editBuffer}
+        onEditBufferChange={onEditBufferChange}
+        onCancelEditing={onCancelEditing}
+        onResendEdited={() => onResendEdited(msg)}
+        textareaRef={textareaRef}
+      />
     );
   }
 
@@ -672,8 +629,75 @@ const UserMessage: React.FC<{
   );
 };
 
-// Assistant Message Component
-const AssistantMessage: React.FC<{ msg: ChatMessage }> = ({ msg }) => (
+interface UserMessageProps {
+  msg: ChatMessage;
+  editingMessageId: string | null;
+  editBuffer: string;
+  onEditBufferChange: (text: string) => void;
+  onStartEditing: (msg: ChatMessage) => void;
+  onCancelEditing: () => void;
+  onResendEdited: () => void;
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+}
+
+const EditingUserMessage: React.FC<{
+  editBuffer: string;
+  onEditBufferChange: (text: string) => void;
+  onCancelEditing: () => void;
+  onResendEdited: () => void;
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+}> = ({ editBuffer, onEditBufferChange, onCancelEditing, onResendEdited, textareaRef }) => (
+  <div className="flex justify-end">
+    <div className="relative max-w-2xl bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl rounded-br-sm p-5 shadow-xl">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between text-[11px] text-indigo-100/80">
+          <span className="inline-flex items-center gap-1">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M13.586 3.586a2 2 0 0 1 2.828 2.828l-8.5 8.5L5 15l.086-2.914 8.5-8.5z" />
+              <path d="M4 16h12v2H4z" />
+            </svg>
+            Editing your question
+          </span>
+          <span className="text-slate-200/70">This will resend a new answer</span>
+        </div>
+        <textarea
+          ref={textareaRef}
+          value={editBuffer}
+          onChange={(e) => onEditBufferChange(e.target.value)}
+          className="w-full min-h-[72px] max-h-40 resize-none rounded-2xl border-2 border-indigo-300/70 bg-slate-900/80 px-4 py-3 text-sm text-slate-50 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 shadow-lg transition-all duration-200"
+          rows={4}
+          placeholder="Update your question and click Resend"
+        />
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[11px] text-indigo-100/80">
+            The original question remains visible above in the thread.
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="px-3 py-1.5 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-100 border border-slate-600/60 transition-all duration-150"
+              onClick={onCancelEditing}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="px-3 py-1.5 text-xs rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold shadow-sm transition-all duration-150"
+              onClick={onResendEdited}
+            >
+              Save & resend
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const AssistantMessage: React.FC<{
+  msg: ChatMessage;
+  onSpeak: (text: string) => void;
+}> = ({ msg, onSpeak }) => (
   <div className="flex">
     <div className="flex flex-col max-w-4xl w-full">
       <div className="flex items-start gap-3 mb-3">
@@ -688,30 +712,16 @@ const AssistantMessage: React.FC<{ msg: ChatMessage }> = ({ msg }) => (
           )}
           
           {msg.chart_specs?.length ? (
-            <div className="mt-2 pt-3 border-t border-slate-800/60 space-y-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                Visual answer
-                <motion.span
-                  className="w-1.5 h-1.5 rounded-full bg-emerald-400"
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-              </h4>
-              <div className="grid grid-cols-1 gap-4">
-                {msg.chart_specs.map((spec, i) => (
-                  <ChartRenderer key={i} spec={spec} className="w-full bg-slate-900/80 rounded-2xl border border-slate-800/70 p-3" />
-                ))}
-              </div>
-            </div>
+            <ChartsSection chartSpecs={msg.chart_specs} />
           ) : null}
 
           <button
             type="button"
             className="text-[11px] px-2 py-1 rounded-full bg-slate-900/70 border border-slate-700/70 text-slate-200 hover:bg-slate-800 flex items-center gap-1"
-            // onClick={() => speak(msg.text)}
+            onClick={() => msg.text && onSpeak(msg.text)}
           >
             <Volume2 className="h-3 w-3" />
-            {/* Listen */}
+            Listen
           </button>
         </div>
       </div>
@@ -719,5 +729,106 @@ const AssistantMessage: React.FC<{ msg: ChatMessage }> = ({ msg }) => (
   </div>
 );
 
+const ChartsSection: React.FC<{ chartSpecs: ChartSpec[] }> = ({ chartSpecs }) => (
+  <div className="mt-2 pt-3 border-t border-slate-800/60 space-y-4">
+    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+      Visual answer
+      <motion.span
+        className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+        animate={{ opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+      />
+    </h4>
+    <div className="grid grid-cols-1 gap-4">
+      {chartSpecs.map((spec, i) => (
+        <ChartRenderer key={i} spec={spec} className="w-full bg-slate-900/80 rounded-2xl border border-slate-800/70 p-3" />
+      ))}
+    </div>
+  </div>
+);
+
+const InputForm: React.FC<{
+  question: string;
+  onQuestionChange: (text: string) => void;
+  suggestions: string[];
+  isSubmitDisabled: boolean;
+  isStreaming: boolean;
+  onAsk: () => void;
+  onSuggestionClick: (suggestion: string) => void;
+  placeholder: string;
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+}> = ({
+  question,
+  onQuestionChange,
+  suggestions,
+  isSubmitDisabled,
+  isStreaming,
+  onAsk,
+  onSuggestionClick,
+  placeholder,
+  textareaRef,
+  handleKeyDown
+}) => (
+  <div className="p-6 border-t border-slate-800/50 bg-gradient-to-r from-slate-900/80 to-slate-950/80 backdrop-blur-sm">
+    <div className="max-w-4xl mx-auto">
+      <div className="flex gap-4 items-end">
+        <textarea
+          ref={textareaRef}
+          value={question}
+          onChange={(e) => onQuestionChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onInput={(e) => {  
+            e.currentTarget.style.height = 'auto';
+            e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+          }}
+          placeholder={placeholder}
+          disabled={isStreaming}
+          rows={1}
+          className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-2xl px-5 py-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent min-h-[52px] max-h-[200px]"
+        />
+        <button
+          onClick={onAsk}
+          disabled={isSubmitDisabled}
+          className="w-14 h-14 flex items-center justify-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-2xl shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:shadow-none transition-all duration-200 flex-shrink-0"
+        >
+          {isStreaming ? '⏳' : '➤'}
+        </button>
+      </div>
+      
+      {suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-4">
+          {suggestions.slice(0, 3).map((suggestion, i) => (
+            <button
+              key={i}
+              onClick={() => onSuggestionClick(suggestion)}
+              className="px-4 py-2 text-xs bg-slate-800/70 hover:bg-slate-700 border border-slate-600/50 text-slate-300 hover:text-white rounded-xl transition-all duration-200"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const ErrorBanner: React.FC<{
+  error: string;
+  onDismiss: () => void;
+}> = ({ error, onDismiss }) => (
+  <div className="p-4 border-t border-slate-800/50 bg-red-500/10 border-red-500/30 shrink-0">
+    <div className="text-sm text-red-300 flex items-center gap-2">
+      <span>⚠️</span>
+      {error}
+      <button
+        onClick={onDismiss}
+        className="ml-auto p-1 hover:bg-red-500/20 rounded-lg transition-colors"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  </div>
+);
 
 export default ChatPage;
