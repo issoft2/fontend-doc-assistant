@@ -1,4 +1,4 @@
-// src/layouts/AdminLayout.tsx - COMPLETE FIXED VERSION
+// src/layouts/AdminLayout.tsx - PERFECTLY FIXED VERSION
 import React, { useState, useCallback } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -64,9 +64,9 @@ const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen font-light text-white antialiased flex flex-row"> {/* ✅ FIXED: FLEX ROW */}
-      {/* Background - spans full screen */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
+    <div className="min-h-screen font-light text-white antialiased flex flex-row bg-[#0a0613]">
+      {/* 🎨 BACKGROUND - FIXED LOWEST Z-INDEX */}
+      <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none">
         <div 
           className="absolute inset-0 opacity-20"
           style={{
@@ -77,12 +77,12 @@ const AdminLayout: React.FC = () => {
         <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#9b87f5]/10 rounded-full blur-3xl animate-pulse delay-1000" />
       </div>
 
-      {/* SIDEBAR - Fixed Width */}
+      {/* SIDEBAR - Fixed Width, Proper Z-Index */}
       {canSeeAdmin && (
         <motion.aside 
           initial={{ x: -300 }}
           animate={{ x: 0 }}
-          className="w-72 flex-shrink-0 flex flex-col z-50 shadow-2xl backdrop-blur-xl border-r border-white/5" // ✅ flex-shrink-0
+          className="w-72 flex-shrink-0 flex flex-col z-40 shadow-2xl backdrop-blur-xl border-r border-white/5 isolate"
           style={{
             background: 'linear-gradient(180deg, rgba(10, 6, 19, 0.98) 0%, rgba(21, 13, 39, 0.98) 100%)',
           }}
@@ -175,13 +175,13 @@ const AdminLayout: React.FC = () => {
         </motion.aside>
       )}
 
-      {/* MAIN CONTENT AREA - Flex 1 fills remaining space */}
-      <div className="flex-1 flex flex-col min-h-screen relative z-10">
+      {/* MAIN CONTENT AREA - PERFECT Z-INDEX & ISOLATION */}
+      <div className="flex-1 flex flex-col min-h-screen isolate relative z-10">
         {/* Header */}
         <motion.header 
           initial={{ y: -100 }}
           animate={{ y: 0 }}
-          className="backdrop-blur-xl bg-white/5 border-b border-white/5 shadow-2xl sticky top-0 z-40 flex-shrink-0"
+          className="backdrop-blur-xl bg-white/5 border-b border-white/5 shadow-2xl sticky top-0 z-30 flex-shrink-0 isolate"
           style={{
             background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
           }}
@@ -208,32 +208,57 @@ const AdminLayout: React.FC = () => {
           </div>
         </motion.header>
 
-        {/* Mobile Nav */}
+        {/* Mobile Nav Overlay */}
         {canSeeAdmin && mobileNavOpen && (
           <motion.div 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            className="md:hidden backdrop-blur-xl bg-[#0a0613]/95 border-b border-white/5 shadow-2xl flex-shrink-0"
+            exit={{ height: 0, opacity: 0 }}
+            className="md:hidden backdrop-blur-xl bg-[#0a0613]/95 border-b border-white/5 shadow-2xl flex-shrink-0 z-20 isolate"
             style={{
               background: 'linear-gradient(180deg, rgba(10, 6, 19, 0.98) 0%, rgba(21, 13, 39, 0.98) 100%)',
             }}
           >
-            {/* Mobile nav content stays same */}
-            <div className="max-h-[70vh] overflow-y-auto">
-              {/* ... mobile nav content unchanged ... */}
+            <div className="max-h-[70vh] overflow-y-auto p-4 space-y-2">
+              {visibleNavItems.map((item, index) => (
+                <motion.button
+                  key={item.path}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => {
+                    navigate(item.path);
+                    closeMobileNav();
+                  }}
+                  className={cn(
+                    "group w-full text-left rounded-2xl px-6 py-4 font-light text-base transition-all duration-300 flex items-center gap-4 border border-white/10 backdrop-blur-sm hover:shadow-[0_0_20px_rgba(155,_135,_245,_0.3)] hover:border-[#9b87f5]/30",
+                    isActive(item.path)
+                      ? "bg-gradient-to-r from-[#9b87f5]/20 to-purple-600/20 text-white shadow-[0_0_25px_rgba(155,_135,_245,_0.4)] border-[#9b87f5]/40"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  )}
+                >
+                  <span className={cn(
+                    "w-3 h-3 rounded-full shadow-sm flex-shrink-0",
+                    isActive(item.path)
+                      ? "bg-gradient-to-r from-[#9b87f5] to-purple-500 shadow-[#9b87f5]/50"
+                      : "bg-white/30 group-hover:bg-[#9b87f5]/60"
+                  )} />
+                  <span>{item.icon} {item.label}</span>
+                </motion.button>
+              ))}
             </div>
           </motion.div>
         )}
 
-        {/* MAIN CONTENT - Full height, fills remaining space */}
+        {/* 🔥 MAIN CONTENT - PERFECTLY ISOLATED FOR PAGES */}
         <motion.main 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="flex-1 overflow-y-auto p-6 lg:p-12" // ✅ FIXED: Proper flex + scroll
-          style={{ minHeight: 0 }} // ✅ Required for flex children to scroll
+          className="flex-1 overflow-y-auto p-6 lg:p-12 isolate bg-transparent relative z-10"
+          style={{ minHeight: 0 }}
         >
-          <Outlet /> {/* Pages render HERE beside sidebar */}
+          <Outlet /> {/* 🎉 Your pages render HERE perfectly! */}
         </motion.main>
       </div>
     </div>
