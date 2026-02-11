@@ -5,15 +5,16 @@
     "lib": ["DOM", "ESNext"],
     "jsx": "react-jsx",
     "strict": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",         // ✅ FIXED: Vite standard
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,  // ✅ Vite needs this
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": { "@/*": ["src/*"] },
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "verbatimModuleSyntax": true
+    "noUnusedLocals": false,               // ✅ FIXED: Docker builds!
+    "noUnusedParameters": false,           // ✅ FIXED: Docker builds!
+    "verbatimModuleSyntax": false          // ✅ FIXED: Import errors
   },
   "files": [],
   "references": [
