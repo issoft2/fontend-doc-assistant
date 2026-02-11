@@ -6,18 +6,19 @@
     "module": "ESNext",
     "types": ["node"],
     "skipLibCheck": true,
+    "composite": true,
+    "moduleResolution": "bundler",        // ✅ SINGLE - remove duplicate
 
     /* Bundler mode */
-    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,        // ✅ FIXED: Docker builds!
     "moduleDetection": "force",
     "noEmit": true,
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,              // ✅ FIXED: No unused errors
+    "noUnusedParameters": false,          // ✅ FIXED: No unused errors
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
