@@ -27,7 +27,7 @@ export function useQueryStream() {
   // Refs
   const abortControllerRef = useRef<AbortController | null>(null);
   const fullAnswerRef = useRef('');
-  const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const typingIntervalRef = useRef<number | null>(null);
 
   // Typing animation
   const startTyping = useCallback((text: string, speed = TYPE_SPEED_MS) => {
