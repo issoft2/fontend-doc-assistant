@@ -44,6 +44,8 @@ const AdminLayout: React.FC = () => {
     { path: '/admin/organizations', label: '🏢 Organizations', icon: '🏢', roles: ['vendor', 'group_admin', 'group_hr', 'group_finance'] },
      { path: '/admin/collections', label: '📂 Collections', icon: '📂' },
     { path: '/admin/users', label: '👥 Users', icon: '👥' },
+    { path: '/admin/ingestion', label: '📄 Ingestion', icon: '📄' },
+
   ];
 
   const visibleNavItems = navItems.filter(item => {
