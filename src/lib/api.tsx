@@ -106,7 +106,7 @@ export interface CreateOrganizationPayload {
 
 // ---- USER MANAGEMENT (uses existing SignupPayload) ----
 export function createUserForTenant(tenant_id: string, payload: Omit<SignupPayload, 'tenant_id'>) {
-  return api.post('/users/', { tenant_id, ...payload });
+  return api.post('/auth/users/', { tenant_id, ...payload });
 }
 
 export function listUsersForTenant(tenantId: string) {
@@ -220,6 +220,7 @@ export function signup(payload: SignupPayload) {
     ...(payload.tenant_id != null ? { tenant_id: payload.tenant_id } : {}),
   });
 }
+
 
 export function firstLoginVerify(payload: { token: string }) {
   return api.post('/auth/first-login/verify', payload);
