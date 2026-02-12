@@ -12,6 +12,7 @@ import TenantsList from "./components/admin/TenantsList";
 import OrganizationsList from "./components/admin/OrganizationsList"
 import CollectionList from "./components/admin/CollectionsList";
 import UserList from "./components/admin/UserList";
+import DocumentIngestion from "./components/admin/DocumentIngestion";
 // import Dashboard from "./pages/admin_dashboard"; // ✅ Uncommented
 // import TenantForm from "./pages/TenantForm"; // ✅ Add your pages
 
@@ -46,6 +47,9 @@ const App = () => {
         <Route path="organizations" element={<OrganizationsList />} />  
         <Route path="collections" element={<CollectionList />} />
         <Route path="users" element={<UserList />} />
+        <Route path="data/ingestion" element={<DocumentIngestion />} />
+     
+
 
         {/* <Route index element={<Dashboard />} /> */}
         {/* <Route path="ingest" element={<Dashboard />} />  */}
