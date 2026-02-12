@@ -47,7 +47,7 @@ const App = () => {
         <Route path="organizations" element={<OrganizationsList />} />  
         <Route path="collections" element={<CollectionList />} />
         <Route path="users" element={<UserList />} />
-        <Route path="data/ingestion" element={<DocumentIngestion />} />
+        <Route path="ingestion" element={<DocumentIngestion />} />
      
 
 
