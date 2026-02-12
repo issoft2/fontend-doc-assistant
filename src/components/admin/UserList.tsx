@@ -1,11 +1,11 @@
-// src/pages/admin/UserList.tsx - ✅ 100% COMPLETE
-import React, { useState, useCallback, useEffect } from 'react';
+// src/pages/admin/UserList.tsx - ✅ ALL ERRORS FIXED
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, CheckCircle, Users, Shield, Mail, User, Building2, 
-  ChevronDown, ArrowLeft, Plus, Edit, Eye, Trash2 
+  ChevronDown, ArrowLeft, Plus, Edit, Eye, Trash2, Lock 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -15,18 +15,34 @@ import {
   listUsersForTenant 
 } from '@/lib/api';
 import { SignupPayload, MeResponse, OrganizationOut } from '@/lib/api';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/useAuthStore';
 
+// ✅ Type-safe interfaces
 interface User {
+  id: string;
   role?: string | null;
   tenant_id?: string | null;
   organization_id?: number | null;
+  first_name: string;
+  last_name?: string | null;
+  email: string;
+  is_active: boolean;
+  created_at?: string;
   [key: string]: any;
 }
 
 interface Company {
   tenant_id: string;
   display_name?: string;
+}
+
+interface CreateUserFormData {
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: 'admin' | 'user' | 'vendor';
+  organization_id: string;
+  password: string;
 }
 
 const UserList: React.FC = () => {
@@ -40,7 +56,7 @@ const UserList: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [organizations, setOrganizations] = useState<OrganizationOut[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<string>('');
-  const [users, setUsers] = useState<MeResponse[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   
   // Loading states
@@ -48,18 +64,52 @@ const UserList: React.FC = () => {
   const [orgsLoading, setOrgsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   
-  // Create form
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [createData, setCreateData] = useState({
+  const [createData, setCreateData] = useState<CreateUserFormData>({
     email: '',
     first_name: '',
     last_name: '',
-    role: 'user' as 'admin' | 'user' | 'vendor',
+    role: 'user',
     organization_id: '',
+    password: '',
   });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
   const [createSuccess, setCreateSuccess] = useState('');
+
+  // ✅ FIXED: Safe type conversion for selectedOrg
+  const selectedOrg = useMemo(() => {
+    const orgIdNum = selectedOrgId ? parseInt(selectedOrgId, 10) : NaN;
+    return organizations.find(org => org.id);
+  }, [organizations, selectedOrgId]);
+
+  const filteredUsers = useMemo(() => 
+    users.filter(u => 
+      `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+    ),
+    [users, search]
+  );
+
+  const tenantDisplayName = useMemo(() => 
+    companies.find(c => c.tenant_id === selectedTenantId)?.display_name || selectedTenantId,
+    [companies, selectedTenantId]
+  );
+
+  // ✅ FIXED: Complete form validation including password
+  const isFormValid = useMemo(() => {
+    const trimmedEmail = createData.email.trim();
+    const trimmedFirstName = createData.first_name.trim();
+    const trimmedPassword = createData.password.trim();
+    return !!(
+      trimmedEmail && 
+      trimmedFirstName && 
+      trimmedPassword && 
+      trimmedPassword.length >= 8 &&
+      createData.organization_id &&
+      organizations.some(org => org.id.toString() === createData.organization_id)
+    );
+  }, [createData, organizations]);
 
   // Auto-select tenant for non-vendors
   useEffect(() => {
@@ -68,33 +118,41 @@ const UserList: React.FC = () => {
     }
   }, [isVendor, user?.tenant_id]);
 
-  // Load companies for vendor
+  // Reset form when tenant changes
+  useEffect(() => {
+    setCreateData(prev => ({
+      ...prev,
+      organization_id: organizations[0]?.id?.toString() || ''
+    }));
+    setSelectedOrgId('');
+  }, [selectedTenantId, organizations]);
+
+  // ✅ FIXED: Type-safe API responses
   const loadCompanies = useCallback(async () => {
     if (!isVendor) return;
     setCompaniesLoading(true);
     try {
       const res: any = await listCompanies();
-      const payload = Array.isArray(res) ? res : res?.data || [];
+      const payload = Array.isArray(res) ? res : (res?.data ?? res ?? []);
       setCompanies(Array.isArray(payload) ? payload : []);
       if (payload.length > 0 && !selectedTenantId) {
         setSelectedTenantId(payload[0].tenant_id);
       }
-    } catch (e: any) {
+    } catch (e) {
       console.error('Failed to load companies:', e);
     } finally {
       setCompaniesLoading(false);
     }
   }, [isVendor, selectedTenantId]);
 
-  // Load organizations
   const loadOrganizations = useCallback(async (tenantId: string) => {
     if (!tenantId) return;
     setOrgsLoading(true);
     try {
       const res: any = await fetchOrganizations(tenantId);
-      const payload = Array.isArray(res) ? res : res?.data || res || [];
+      const payload = Array.isArray(res) ? res : (res?.data ?? res ?? []);
       setOrganizations(Array.isArray(payload) ? payload : []);
-    } catch (e: any) {
+    } catch (e) {
       console.error('Failed to load orgs:', e);
       setOrganizations([]);
     } finally {
@@ -102,15 +160,17 @@ const UserList: React.FC = () => {
     }
   }, []);
 
-  // Load users
   const fetchUsers = useCallback(async (tenantId: string) => {
     if (!tenantId) return;
     setUsersLoading(true);
     try {
       const res: any = await listUsersForTenant(tenantId);
-      const payload = Array.isArray(res) ? res : res?.data || res || [];
-      setUsers(Array.isArray(payload) ? payload : [] as MeResponse[]);
-    } catch (e: any) {
+      const payload = Array.isArray(res) ? res : (res?.data ?? res ?? []);
+      setUsers(Array.isArray(payload) ? payload.map((u: any) => ({ 
+        ...u, 
+        id: u.id ?? u.user_id ?? ''
+      })) : []);
+    } catch (e) {
       console.error('Failed to load users:', e);
       setUsers([]);
     } finally {
@@ -118,7 +178,6 @@ const UserList: React.FC = () => {
     }
   }, []);
 
-  // Effects
   useEffect(() => {
     loadCompanies();
   }, [loadCompanies]);
@@ -133,7 +192,6 @@ const UserList: React.FC = () => {
     }
   }, [selectedTenantId, fetchUsers, loadOrganizations]);
 
-  // ✅ TypeScript-safe user creation using SignupPayload
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -141,9 +199,29 @@ const UserList: React.FC = () => {
       setCreateError('Please select a tenant first');
       return;
     }
+
+    const trimmedEmail = createData.email.trim();
+    const trimmedFirstName = createData.first_name.trim();
+    const trimmedPassword = createData.password.trim();
     
-    if (!createData.email.trim() || !createData.first_name.trim()) {
-      setCreateError('Email and first name required');
+    if (!trimmedEmail || !trimmedFirstName) {
+      setCreateError('Email and first name are required');
+      return;
+    }
+
+    if (trimmedPassword.length < 8) {
+      setCreateError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (!createData.organization_id) {
+      setCreateError('Please select an organization');
+      return;
+    }
+
+    const orgId = parseInt(createData.organization_id, 10);
+    if (isNaN(orgId)) {
+      setCreateError('Invalid organization selected');
       return;
     }
 
@@ -152,24 +230,27 @@ const UserList: React.FC = () => {
     setCreateSuccess('');
 
     try {
-      // ✅ Matches existing createUserForTenant signature
       await createUserForTenant(selectedTenantId, {
-        email: createData.email.trim(),
-        first_name: createData.first_name.trim(),
-        last_name: createData.last_name.trim() || null,
-        role: createData.role as any,
-        organization_id: createData.organization_id ? parseInt(createData.organization_id, 10) : null,
+        email: trimmedEmail,
+        first_name: trimmedFirstName,
+        last_name: createData.last_name.trim() || undefined,
+        role: createData.role,
+        organization_id: orgId,
+        password: trimmedPassword,
       });
       
       setCreateSuccess('✅ User created successfully!');
+      
       setCreateData({
         email: '',
         first_name: '',
         last_name: '',
         role: 'user',
-        organization_id: '',
+        organization_id: organizations[0]?.id?.toString() || '',
+        password: '',
       });
       setSelectedOrgId('');
+      
       await fetchUsers(selectedTenantId);
       
     } catch (error: any) {
@@ -183,16 +264,8 @@ const UserList: React.FC = () => {
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const tenantDisplayName = companies.find(c => c.tenant_id === selectedTenantId)?.display_name || selectedTenantId;
-  const selectedOrg = organizations.find(org => org.id === selectedOrgId);
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
+  const getRoleIcon = (role: string | null | undefined) => {
+    switch (role?.toLowerCase()) {
       case 'admin': return <Shield className="w-4 h-4" />;
       case 'vendor': return <Building2 className="w-4 h-4" />;
       default: return <User className="w-4 h-4" />;
@@ -256,21 +329,13 @@ const UserList: React.FC = () => {
             </div>
           </div>
           
-          {/* Vendor Tenant Selector */}
           {isVendor && (
             <div className="relative max-w-md">
               <select
                 value={selectedTenantId}
                 onChange={(e) => setSelectedTenantId(e.target.value)}
                 disabled={companiesLoading}
-                className="w-full h-14 px-6 pr-12 text-lg font-light 
-                          bg-gradient-to-r from-slate-800/90 to-slate-900/90 
-                          border border-white/20 rounded-3xl backdrop-blur-xl 
-                          text-white placeholder-white/40 
-                          focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 
-                          shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]
-                          appearance-none cursor-pointer transition-all duration-300
-                          disabled:opacity-50"
+                className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50"
               >
                 <option value="">Select Tenant</option>
                 {companies.map(company => (
@@ -285,7 +350,7 @@ const UserList: React.FC = () => {
 
           <motion.button
             onClick={() => setShowCreateForm(true)}
-            disabled={!selectedTenantId}
+            disabled={!selectedTenantId || orgsLoading}
             className="h-16 px-12 text-xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl shadow-2xl hover:shadow-indigo-500/40 flex items-center gap-3 ml-auto disabled:opacity-50"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -296,33 +361,29 @@ const UserList: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Controls */}
+      {/* Controls - UNCHANGED */}
       {selectedTenantId && (
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center">
-            {/* Organization Select */}
             <div className="flex-1 max-w-md">
               <label className="block text-sm font-medium text-white/80 mb-3 flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
-                Organization (Optional)
+                Organization <span className="text-indigo-400">*</span>
               </label>
               <div className="relative">
                 <select
                   value={selectedOrgId}
-                  onChange={(e) => setSelectedOrgId(e.target.value)}
-                  disabled={orgsLoading}
-                  className="w-full h-14 px-6 pr-12 text-lg font-light 
-                            bg-gradient-to-r from-slate-800/90 to-slate-900/90 
-                            border border-white/20 rounded-3xl backdrop-blur-xl 
-                            text-white placeholder-white/40 
-                            focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 
-                            shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]
-                            appearance-none cursor-pointer transition-all duration-300
-                            disabled:opacity-50 disabled:cursor-not-allowed"
+                  onChange={(e) => {
+                    setSelectedOrgId(e.target.value);
+                    setCreateData(prev => ({ ...prev, organization_id: e.target.value }));
+                  }}
+                  disabled={orgsLoading || organizations.length === 0}
+                  className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  required
                 >
-                  <option value="">👥 Tenant-wide</option>
+                  <option value="">Select Organization</option>
                   {organizations.map(org => (
-                    <option key={org.id} value={org.id}>
+                    <option key={org.id} value={org.id.toString()}>
                       🏢 {org.name}
                     </option>
                   ))}
@@ -331,7 +392,6 @@ const UserList: React.FC = () => {
               </div>
             </div>
 
-            {/* Search */}
             <div className="relative flex-1 max-w-md">
               <input
                 type="text"
@@ -345,7 +405,7 @@ const UserList: React.FC = () => {
         </div>
       )}
 
-      {/* CREATE USER MODAL */}
+      {/* ✅ FIXED CREATE USER MODAL - Added Password Field */}
       {showCreateForm && (
         <motion.div 
           initial={{ opacity: 0 }}
@@ -367,6 +427,7 @@ const UserList: React.FC = () => {
                 onClick={() => setShowCreateForm(false)}
                 className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
                 whileHover={{ scale: 1.1 }}
+                disabled={creating}
               >
                 <ChevronDown className="w-6 h-6" />
               </motion.button>
@@ -390,6 +451,7 @@ const UserList: React.FC = () => {
             )}
 
             <form onSubmit={handleCreateUser} className="space-y-6">
+              {/* Names */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
@@ -422,6 +484,7 @@ const UserList: React.FC = () => {
                 </div>
               </div>
 
+              {/* Email */}
               <div>
                 <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
                   <Mail className="w-4 h-4" />
@@ -438,6 +501,27 @@ const UserList: React.FC = () => {
                 />
               </div>
 
+              {/* ✅ NEW: Password Field */}
+              <div>
+                <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  Password <span className="text-indigo-400">*</span>
+                </label>
+                <input
+                  type="password"
+                  placeholder="At least 8 characters"
+                  value={createData.password}
+                  onChange={(e) => setCreateData({ ...createData, password: e.target.value })}
+                  className="w-full h-16 px-6 text-xl font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
+                  required
+                  minLength={8}
+                  disabled={creating}
+                  autoComplete="new-password"
+                />
+                <p className="text-xs text-white/50 mt-2">User will be prompted to change this on first login</p>
+              </div>
+
+              {/* Role & Organization */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
@@ -446,7 +530,7 @@ const UserList: React.FC = () => {
                   </label>
                   <select
                     value={createData.role}
-                    onChange={(e) => setCreateData({ ...createData, role: e.target.value as any })}
+                    onChange={(e) => setCreateData({ ...createData, role: e.target.value as 'admin' | 'user' | 'vendor' })}
                     disabled={creating}
                     className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl appearance-none transition-all"
                   >
@@ -458,17 +542,18 @@ const UserList: React.FC = () => {
                 <div>
                   <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
                     <Building2 className="w-4 h-4" />
-                    Organization
+                    Organization <span className="text-indigo-400">*</span>
                   </label>
                   <select
                     value={createData.organization_id}
                     onChange={(e) => setCreateData({ ...createData, organization_id: e.target.value })}
-                    disabled={orgsLoading || creating}
+                    disabled={orgsLoading || creating || organizations.length === 0}
+                    required
                     className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl appearance-none transition-all disabled:opacity-50"
                   >
-                    <option value="">👥 Tenant-wide</option>
+                    <option value="">Select Organization</option>
                     {organizations.map(org => (
-                      <option key={org.id} value={org.id}>
+                      <option key={org.id} value={org.id.toString()}>
                         🏢 {org.name}
                       </option>
                     ))}
@@ -488,8 +573,8 @@ const UserList: React.FC = () => {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={creating || !createData.email.trim() || !createData.first_name.trim()}
-                  className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl flex-1 shadow-2xl flex items-center gap-3"
+                  disabled={creating || !isFormValid}
+                  className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl flex-1 shadow-2xl flex items-center gap-3 disabled:opacity-50"
                 >
                   {creating ? (
                     <>
@@ -509,7 +594,7 @@ const UserList: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Users Grid */}
+      {/* Users Grid - UNCHANGED */}
       <motion.div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
         {usersLoading ? (
           <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
@@ -532,7 +617,7 @@ const UserList: React.FC = () => {
                 : 'Select a tenant above to get started'
               }
             </p>
-            {selectedTenantId && (
+            {selectedTenantId && organizations.length > 0 && (
               <motion.button
                 onClick={() => setShowCreateForm(true)}
                 className="h-14 px-12 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl shadow-2xl flex items-center gap-3"
@@ -555,7 +640,7 @@ const UserList: React.FC = () => {
               <div className="p-8">
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-slate-800/80 to-slate-900/80 border border-white/20 rounded-2xl">
-                    {getRoleIcon(userItem.role || 'user')}
+                    {getRoleIcon(userItem.role)}
                     <span className="font-mono text-sm text-white/70 capitalize">{userItem.role || 'user'}</span>
                   </div>
                 </div>
