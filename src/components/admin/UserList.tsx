@@ -16,6 +16,26 @@ import {
 import { SignupPayload, MeResponse, OrganizationOut } from '@/lib/api';
 import { useAuthStore } from '@/useAuthStore';
 
+const allAssignableRoles = [
+  'employee',
+  'sub_hr',
+  'sub_finance',
+  'sub_operations',
+  'sub_md',
+  'sub_admin',
+  'group_hr',
+  'group_finance',
+  'group_operation',
+  'group_production',
+  'group_marketing',
+  'group_legal',
+  'group_exe',
+  'group_admin',
+  'group_gmd',
+] as const;
+
+type AssignableRole = typeof allAssignableRoles[number];
+
 interface Company {
   tenant_id: string;
   display_name?: string;
@@ -50,7 +70,7 @@ const UserList: React.FC = () => {
     last_name: '',
     date_of_birth: '',
     phone: '',
-    role: 'user',
+    role: '',
     organization_id: 0,
   });
   const [creating, setCreating] = useState(false);
@@ -223,7 +243,7 @@ const UserList: React.FC = () => {
         last_name: '',
         date_of_birth: '',
         phone: '',
-        role: 'user',
+        role: '',
         organization_id: 0,
       });
       
@@ -241,13 +261,24 @@ const UserList: React.FC = () => {
     }
   };
 
-  const getRoleIcon = (role?: string | null) => {
-    switch (role?.toLowerCase()) {
-      case 'admin': return <Shield className="w-4 h-4" />;
-      case 'vendor': return <Building2 className="w-4 h-4" />;
-      default: return <User className="w-4 h-4" />;
-    }
-  };
+const getRoleIcon = (role?: string | null): React.ReactNode => {
+  if (!role) return <User className="w-4 h-4" />;
+  
+  const roleLower = role.toLowerCase();
+  
+  // Admin-like roles
+  if (roleLower.includes('admin') || roleLower.includes('gmd')) {
+    return <Shield className="w-4 h-4" />;
+  }
+  
+  // Group-level roles (executive/management)
+  if (roleLower.startsWith('group_')) {
+    return <Building2 className="w-4 h-4" />;
+  }
+  
+  // Default user icon
+  return <User className="w-4 h-4" />;
+};
 
   if (!user) {
     return (
@@ -485,24 +516,27 @@ const UserList: React.FC = () => {
                 <p className="text-xs text-white/50 mt-2">User will be prompted to change this on first login</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
-                    <Shield className="w-4 h-4" />
-                    Role
-                  </label>
-                  <select
-                    value={createData.role}
-                    onChange={(e) => setCreateData({ ...createData, role: e.target.value as any })}
-                    disabled={creating}
-                    className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl appearance-none transition-all"
-                  >
-                    <option value="user">👤 User</option>
-                    <option value="admin">🔐 Admin</option>
-                    <option value="vendor">🏢 Vendor</option>
-                  </select>
-                </div>
+             <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Role
+                </label>
+                <select
+                  value={createData.role}
+                  onChange={(e) => setCreateData({ ...createData, role: e.target.value as AssignableRole })}
+                  disabled={creating}
+                  className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl appearance-none transition-all"
+                >
+                  <option value="">Select Role</option>
+                  {allAssignableRoles.map((role) => (
+                    <option key={role} value={role}>
+                      {role.charAt(0).toUpperCase() + role.slice(1).replace(/_/g, ' ')}
+                    </option>
+                  ))}
+                </select>
               </div>
+            </div>
 
               <div className="pt-8 border-t border-white/10 flex gap-4">
                 <Button
