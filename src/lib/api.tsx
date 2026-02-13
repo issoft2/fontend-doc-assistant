@@ -106,7 +106,7 @@ export interface CreateOrganizationPayload {
 
 // ---- USER MANAGEMENT (uses existing SignupPayload) ----
 export function createUserForTenant(tenant_id: string, payload: Omit<SignupPayload, 'tenant_id'>) {
-  return api.post('/auth/users/', { tenant_id, ...payload });
+  return api.post('/auth/signup/', { tenant_id, ...payload });
 }
 
 export function listUsersForTenant(tenantId: string) {
