@@ -336,7 +336,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
 
           <motion.button
             onClick={() => setShowCreateForm(true)}
-            disabled={!selectedTenantId || orgsLoading}
+            disabled={(!isVendor && !selectedTenantId) || orgsLoading}
             className="h-16 px-12 text-xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl shadow-2xl hover:shadow-indigo-500/40 flex items-center gap-3 ml-auto disabled:opacity-50"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -434,32 +434,32 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                 )}
 
                 {/* ✅ FIXED: Organization Select - Shows selected org */}
-                <div>
-                  <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
-                    <Building2 className="w-4 h-4" />
-                    Organization <span className="text-red-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={createData.organization_id ? createData.organization_id.toString() : ''}  // ✅ FIXED: "" when 0
-                      onChange={(e) => setCreateData(prev => ({ 
-                        ...prev, 
-                        organization_id: Number(e.target.value) || 0 
-                      }))}
-                      disabled={orgsLoading || organizations.length === 0}
-                      required
-                      className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50"
-                    >
-                      <option value="">-- Select Organization --</option>
-                      {organizations.map(org => (
-                        <option key={org.id} value={org.id}>
-                          🏢 {org.name}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-5 h-5 text-white/50 absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
+               <div>
+                <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Organization <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={createData.organization_id.toString()}  // ✅ ALWAYS string
+                    onChange={(e) => {
+                      const newId = Number(e.target.value) === 0 ? 0 : Number(e.target.value);
+                      setCreateData(prev => ({ ...prev, organization_id: newId }));
+                    }}
+                    disabled={(!isVendor && !selectedTenantId) || orgsLoading || organizations.length === 0}
+                    required
+                    className="w-full h-14 px-6 pr-12 text-lg font-light border border-white/20 rounded-3xl backdrop-blur-xl focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50"
+                  >
+                    <option value="0">-- Select Organization --</option>
+                    {organizations.map(org => (
+                      <option key={org.id} value={org.id.toString()}  style={{ backgroundColor: '#1e293b', color: '#f8fafc' }}>  
+                        🏢 {org.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-5 h-5 text-white/50 absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
+              </div>
 
                 {/* Names Row */}
                 <div className="grid grid-cols-2 gap-6">
@@ -581,7 +581,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                   >
                     <option value="">-- Select Role --</option>
                     {allAssignableRoles.map((role) => (
-                      <option key={role} value={role}>
+                      <option key={role} value={role} style={{ backgroundColor: '#1e293b', color: '#f8fafc' }}>
                         {role.charAt(0).toUpperCase() + role.slice(1).replace(/_/g, ' ')}
                       </option>
                     ))}
@@ -601,7 +601,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={creating || createData.organization_id === 0}
+                    disabled={creating}
                     className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl flex-1 shadow-2xl flex items-center gap-3 disabled:opacity-50"
                   >
                     {creating ? (
@@ -646,7 +646,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                 : 'Select a tenant above to get started'
               }
             </p>
-            {selectedTenantId && organizations.length > 0 && (
+            {isVendor && organizations.length > 0 && (
               <motion.button
                 onClick={() => setShowCreateForm(true)}
                 className="h-14 px-12 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl shadow-2xl flex items-center gap-3"
