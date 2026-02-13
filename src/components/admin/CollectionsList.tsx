@@ -20,7 +20,7 @@ import { useAuthStore } from '@/useAuthStore';
 interface User {
   role?: string | null;
   tenant_id?: string | null;
-  organization_id?: number | null;
+  organization_id?: string| null;
   [key: string]: any;
 }
 
@@ -63,7 +63,7 @@ const CollectionList: React.FC = () => {
   // ✅ Auto-select tenant for non-vendors (SAME AS OrganizationsList)
   useEffect(() => {
     if (!isVendor && user?.tenant_id) {
-      setSelectedTenantId(user.tenant_id.toString());
+      setSelectedTenantId(user.tenant_id);
     }
   }, [isVendor, user?.tenant_id]);
 
@@ -295,7 +295,6 @@ const handleCreateCollection = async (e: React.FormEvent) => {
       {selectedTenantId && (
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center">
-            {/* ✅ FIXED Organization Select - Dark theme */}
             <div className="flex-1 max-w-md">
               <label className="block text-sm font-medium text-white/80 mb-3 flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
