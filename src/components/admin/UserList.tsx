@@ -439,7 +439,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                   Organization <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
-                 <select
+                 {/* <select
                       value={createData.organization_id.toString()}
                       onChange={(e) => {
                         const newId = Number(e.target.value);
@@ -455,7 +455,28 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                           {org.name} (ID: {org.id})
                         </option>
                       ))}
-                    </select>
+                    </select> */}
+
+                    <select
+                        value={String(createData.organization_id)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const id = value === "0" ? 0 : parseInt(value) || 0;
+                          console.log('✅ FIXED:', { value, id });
+                          setCreateData(prev => ({ ...prev, organization_id: id }));
+                        }}
+                        disabled={false}
+                        className="w-full h-14 px-6 pr-12 text-lg font-light bg-slate-800 border border-white/20 rounded-3xl text-white"
+
+                      >
+                        <option value="0">-- Select ({organizations.length}) --</option>
+                        {organizations.map(org => (
+                          <option key={org.id} value={String(org.id || 0)}>
+                            {org.name}
+                          </option>
+                        ))}
+                      </select>
+
 
 
                   
