@@ -37,14 +37,14 @@ const AdminLayout: React.FC = () => {
   })() : 'Guest';
 
   const navItems = [
-    { path: '/chat', label: '💬 Chat with Assistant', icon: '💬' },
-    { path: '/admin/ingest', label: '📥 Ingest & Configuration', icon: '📥' },
+    { path: '/chat', label: ' Chat with Assistant', icon: '💬' },
+    { path: '/admin/ingest', label: 'Ingest & Configuration', icon: '📥' },
     ...(user?.role === 'vendor' ? [{ path: '/admin/tenant-config', label: '➕ New Tenant', icon: '➕' }] : []),
-    { path: '/admin/tenants', label: '📋 Tenants', icon: '📋', roles: ['vendor', 'group_admin', 'gmd', 'group_hr', 'group_finance'] },
-    { path: '/admin/organizations', label: '🏢 Organizations', icon: '🏢', roles: ['vendor', 'group_admin', 'group_hr', 'group_finance'] },
-     { path: '/admin/collections', label: '📂 Collections', icon: '📂' },
-    { path: '/admin/users', label: '👥 Users', icon: '👥' },
-    { path: '/admin/ingestion', label: '📄 Ingestion', icon: '📄' },
+    { path: '/admin/tenants', label: 'Tenants', icon: '📋', roles: ['vendor', 'group_admin', 'gmd', 'group_hr', 'group_finance'] },
+    { path: '/admin/organizations', label: 'Organizations', icon: '🏢', roles: ['vendor', 'group_admin', 'group_hr', 'group_finance'] },
+     { path: '/admin/collections', label: 'Collections', icon: '📂' },
+    { path: '/admin/users', label: 'Users', icon: '👥' },
+    { path: '/admin/ingestion', label: 'Ingestion', icon: '📥 ' },
 
   ];
 
