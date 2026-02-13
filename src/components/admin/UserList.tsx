@@ -439,23 +439,24 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                   Organization <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
-                  <select
-                    value={createData.organization_id.toString()}  // ✅ ALWAYS string
-                    onChange={(e) => {
-                      const newId = Number(e.target.value) === 0 ? 0 : Number(e.target.value);
-                      setCreateData(prev => ({ ...prev, organization_id: newId }));
-                    }}
-                    disabled={(!isVendor && !selectedTenantId) || orgsLoading || organizations.length === 0}
-                    required
-                    className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl appearance-none transition-all"
-                  >
-                    <option value="0">-- Select Organization --</option>
-                    {organizations.map(org => (
-                      <option key={org.id} value={org.id.toString()}  style={{ backgroundColor: '#1e293b', color: '#f8fafc' }}>  
-                        🏢 {org.name}
-                      </option>
-                    ))}
-                  </select>
+                 <select
+                      value={createData.organization_id.toString()}
+                      onChange={(e) => {
+                        const newId = Number(e.target.value);
+                        console.log('✅ SELECTED:', newId);
+                        setCreateData(prev => ({ ...prev, organization_id: newId }));
+                      }}
+                      disabled={false}  // TEMPORARY
+                      className="w-full h-14 px-6 pr-12 text-lg font-light bg-slate-800 border border-white/20 rounded-3xl text-white"
+                    >
+                      <option value="0">Select Org ({organizations.length})</option>
+                      {organizations.map(org => (
+                        <option key={org.id} value={org.id}>
+                          {org.name} (ID: {org.id})
+                        </option>
+                      ))}
+                    </select>
+
 
                   
                   <ChevronDown className="w-5 h-5 text-white/50 absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
