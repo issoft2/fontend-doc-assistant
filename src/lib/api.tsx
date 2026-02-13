@@ -16,8 +16,8 @@ export interface MeResponse {
   id: number;
   email: string;
   role: string;
-  tenant_id: number;
-  organization_id: number | null;
+  tenant_id: string;
+  organization_id: string;
   roles: string[];
   permissions: string[];
   first_name?: string | null;
@@ -49,13 +49,13 @@ export interface UploadDocumentPayload {
 export interface SignupPayload {
   email: string;
   password: string;
-  tenant_id?: number;
+  tenant_id?: string;
   first_name?: string;
   last_name?: string;
   date_of_birth?: string;
   phone?: string;
   role?: string;
-  organization_id: number;
+  organization_id: string;
 }
 
 export interface LoginPayload {
@@ -95,7 +95,7 @@ export interface CollectionOut {
   visibility: 'tenant' | 'org' | 'role' | 'user';
   allowed_roles: string[];
   allowed_user_ids: string[];
-  created_at: string; // Fixed typo
+  created_at: string; 
   updated_at: string;
 }
 

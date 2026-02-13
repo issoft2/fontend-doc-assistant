@@ -42,7 +42,7 @@ interface Company {
   display_name?: string;
 }
 
-type CreateUserFormData = Omit<SignupPayload, 'tenant_id'>;
+type CreateUserFormData = SignupPayload;
 
 const UserList: React.FC = () => {
   const navigate = useNavigate();
@@ -72,7 +72,8 @@ const UserList: React.FC = () => {
     date_of_birth: '',
     phone: '',
     role: '',
-    organization_id: 0,
+    organization_id: '',
+    tenant_id: '',
   });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
@@ -103,8 +104,8 @@ const UserList: React.FC = () => {
       trimmedFirstName && 
       trimmedPassword && 
       trimmedPassword.length >= 8 &&
-      createData.organization_id > 0 &&
-      organizations.some(org => org.id.toString() === createData.organization_id.toString())
+      createData.organization_id  &&
+      organizations.some(org => org.id === createData.organization_id)
     );
   }, [createData, organizations]);
 
@@ -118,10 +119,9 @@ const UserList: React.FC = () => {
   // ✅ FIXED: Safe org_id conversion
   useEffect(() => {
     if (organizations.length > 0) {
-      const firstOrgId = Number(organizations[0].id);
-      if (!isNaN(firstOrgId)) {
+      const firstOrgId = organizations[0].id;
         setCreateData(prev => ({ ...prev, organization_id: firstOrgId }));
-      }
+      
     }
   }, [organizations]);
 
@@ -159,36 +159,17 @@ const UserList: React.FC = () => {
     }
   }, []);
 
-  // const fetchUsers = useCallback(async () => {
-  //   setUsersLoading(true);
-  //   try {
-  //     const res = await listUsersForTenant();
-  //     const payload = Array.isArray(res) ? res : [];
-  //      console.log('✅ Setting users:', payload.length);
-  //     setUsers(payload);
-  //   } catch (error) {
-  //     console.error('Failed to load users:', error);
-  //     setUsers([]);
-  //   } finally {
-  //     setUsersLoading(false);
-  //   }
-  // }, []);
-
   const fetchUsers = useCallback(async () => {
-  console.log('🚀 fetchUsers called');
   setUsersLoading(true);
   try {
     const res = await listUsersForTenant();
-    console.log('📥 RAW API Response:', res);
-    
-    // ✅ FIXED: Handle Axios { data: [...] } response
+  
     const payload = Array.isArray(res?.data) 
       ? res.data 
       : Array.isArray(res) 
       ? res 
       : [];
     
-    console.log('✅ Users loaded:', payload.length, payload[0]?.email);
     setUsers(payload);
   } catch (error) {
     console.error('❌ Failed to load users:', error);
@@ -216,8 +197,9 @@ const UserList: React.FC = () => {
   // ✅ PERFECTLY typed signup call
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!selectedTenantId) {
+      const finalTenantId = isVendor ? createData.tenant_id : selectedTenantId;
+
+    if (!finalTenantId) {
       setCreateError('Please select a tenant first');
       return;
     }
@@ -236,8 +218,8 @@ const UserList: React.FC = () => {
       return;
     }
 
-    const orgId = Number(createData.organization_id);
-    if (isNaN(orgId) || orgId <= 0) {
+    const orgId = createData.organization_id;
+    if (!orgId) {
       setCreateError('Please select a valid organization');
       return;
     }
@@ -255,8 +237,8 @@ const UserList: React.FC = () => {
         date_of_birth: createData.date_of_birth?.trim() || undefined,
         phone: createData.phone?.trim() || undefined,
         role: createData.role!,
-        organization_id: orgId,
-        tenant_id: Number(selectedTenantId),
+        organization_id: createData.organization_id,
+       tenant_id: finalTenantId,
       };
 
       await signup(payload);
@@ -271,7 +253,8 @@ const UserList: React.FC = () => {
         date_of_birth: '',
         phone: '',
         role: '',
-        organization_id: 0,
+        organization_id: '',
+        tenant_id: '',
       });
       
       setTimeout(() => setCreateSuccess(''), 3000);
@@ -469,15 +452,14 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                         value={String(createData.organization_id)}
                         onChange={(e) => {
                           const value = e.target.value;
-                          const id = value === "0" ? 0 : parseInt(value) || 0;
-                          console.log('✅ FIXED:', { value, id });
-                          setCreateData(prev => ({ ...prev, organization_id: id }));
+                          console.log('✅ FIXED:', { value });
+                          setCreateData(prev => ({ ...prev, organization_id: value}));
                         }}
                         disabled={false}
                         className="w-full h-14 px-6 pr-12 text-lg font-light bg-slate-800 border border-white/20 rounded-3xl text-white"
 
                       >
-                        <option value="0">-- Select ({organizations.length}) --</option>
+                        <option value="">-- Select ({organizations.length}) --</option>
                         {organizations.map(org => (
                           <option key={org.id} value={String(org.id || 0)}>
                             {org.name}
