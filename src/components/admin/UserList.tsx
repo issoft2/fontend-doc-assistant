@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, CheckCircle, Users, Shield, Mail, User, Building2, 
-  ChevronDown, ArrowLeft, Plus, Edit, Eye, Trash2, Lock 
+  ChevronDown, ArrowLeft, Plus, Edit, Eye,  Lock, Phone, Info, 
+  Calendar 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -95,6 +96,7 @@ const UserList: React.FC = () => {
     const trimmedEmail = createData.email.trim();
     const trimmedFirstName = createData.first_name?.trim();
     const trimmedPassword = createData.password.trim();
+
     
     return !!(
       trimmedEmail && 
@@ -423,149 +425,188 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
               </motion.div>
             )}
 
-            <form onSubmit={handleCreateUser} className="space-y-6">
-               <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label htmlFor="" className="block text-lg font-light text-white/80  mb-3 flex items-center gap-2" >
-                      <Shield className="w-4 h-4" />
-                      Organization
-                    </label>
-                  <select
-                      value={createData.organization_id.toString()}
-                      onChange={(e) => setCreateData(prev => ({ ...prev, organization_id: Number(e.target.value) || 0 }))}
-                      disabled={orgsLoading || organizations.length === 0}
-                      className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50"
-                    >
-                      <option value="0">Select Organization</option>
-                      {organizations.map(org => (
-                        <option key={org.id} value={org.id}>
-                          🏢 {org.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                
-              <div className="grid grid-cols-2 gap-6">
+            {/* ✅ REFINED COMPLETE FORM - Copy/Paste Ready */}
+              <form onSubmit={handleCreateUser} className="space-y-6">
+                {/* Organization - REQUIRED */}
                 <div>
                   <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    First Name <span className="text-indigo-400">*</span>
+                    <Building2 className="w-4 h-4" />
+                    Organization <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    value={createData.organization_id.toString()}
+                    onChange={(e) => setCreateData(prev => ({ ...prev, organization_id: Number(e.target.value) || 0 }))}
+                    disabled={orgsLoading || organizations.length === 0}
+                    required
+                    className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50"
+                  >
+                    <option value="0">-- Select Organization --</option>
+                    {organizations.map(org => (
+                      <option key={org.id} value={org.id}>
+                        🏢 {org.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Names Row */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      First Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="John"
+                      value={createData.first_name || ''}
+                      onChange={(e) => setCreateData({ ...createData, first_name: e.target.value })}
+                      className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
+                      required
+                      disabled={creating}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Doe"
+                      value={createData.last_name || ''}
+                      onChange={(e) => setCreateData({ ...createData, last_name: e.target.value })}
+                      className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
+                      disabled={creating}
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email <span className="text-red-400">*</span>
                   </label>
                   <input
-                    type="text"
-                    placeholder="John"
-                    value={createData.first_name || ''}
-                    onChange={(e) => setCreateData({ ...createData, first_name: e.target.value })}
-                    className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
+                    type="email"
+                    placeholder="john.doe@company.com"
+                    value={createData.email}
+                    onChange={(e) => setCreateData({ ...createData, email: e.target.value })}
+                    className="w-full h-16 px-6 text-xl font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
                     required
                     disabled={creating}
                   />
                 </div>
+
+                {/* Password */}
                 <div>
                   <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Last Name
+                    <Lock className="w-4 h-4" />
+                    Password <span className="text-red-400">*</span>
                   </label>
                   <input
-                    type="text"
-                    placeholder="Doe"
-                    value={createData.last_name || ''}
-                    onChange={(e) => setCreateData({ ...createData, last_name: e.target.value })}
-                    className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
+                    type="password"
+                    placeholder="At least 8 characters"
+                    value={createData.password || ''}
+                    onChange={(e) => setCreateData({ ...createData, password: e.target.value })}
+                    className="w-full h-16 px-6 text-xl font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
+                    required
+                    minLength={8}
                     disabled={creating}
+                    autoComplete="new-password"
                   />
+                  <p className="text-xs text-white/50 mt-2 flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    User will reset this on first login
+                  </p>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  Email <span className="text-indigo-400">*</span>
-                </label>
-                <input
-                  type="email"
-                  placeholder="john.doe@company.com"
-                  value={createData.email}
-                  onChange={(e) => setCreateData({ ...createData, email: e.target.value })}
-                  className="w-full h-16 px-6 text-xl font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
-                  required
-                  disabled={creating}
-                />
-              </div>
+                {/* NEW: DOB + Phone Row */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      value={createData.date_of_birth || ''}
+                      onChange={(e) => setCreateData({ ...createData, date_of_birth: e.target.value })}
+                      max={new Date().toISOString().split('T')[0]} // Can't be future date
+                      className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all disabled:opacity-50"
+                      disabled={creating}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="+1 (555) 123-4567"
+                      value={createData.phone || ''}
+                      onChange={(e) => setCreateData({ ...createData, phone: e.target.value })}
+                      className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all disabled:opacity-50"
+                      disabled={creating}
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
-                  <Lock className="w-4 h-4" />
-                  Password <span className="text-indigo-400">*</span>
-                </label>
-                <input
-                  type="password"
-                  placeholder="At least 8 characters"
-                  value={createData.password}
-                  onChange={(e) => setCreateData({ ...createData, password: e.target.value })}
-                  className="w-full h-16 px-6 text-xl font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
-                  required
-                  minLength={8}
-                  disabled={creating}
-                  autoComplete="new-password"
-                />
-                <p className="text-xs text-white/50 mt-2">User will be prompted to change this on first login</p>
-              </div>
+                {/* Role */}
+                <div>
+                  <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Role <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    value={createData.role}
+                    onChange={(e) => setCreateData({ ...createData, role: e.target.value as AssignableRole })}
+                    disabled={creating}
+                    required
+                    className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl appearance-none transition-all"
+                  >
+                    <option value="">-- Select Role --</option>
+                    {allAssignableRoles.map((role) => (
+                      <option key={role} value={role}>
+                        {role.charAt(0).toUpperCase() + role.slice(1).replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-             <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  Role
-                </label>
-                <select
-                  value={createData.role}
-                  onChange={(e) => setCreateData({ ...createData, role: e.target.value as AssignableRole })}
-                  disabled={creating}
-                  className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl appearance-none transition-all"
-                >
-                  <option value="">Select Role</option>
-                  {allAssignableRoles.map((role) => (
-                    <option key={role} value={role}>
-                      {role.charAt(0).toUpperCase() + role.slice(1).replace(/_/g, ' ')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+                {/* Buttons */}
+                <div className="pt-8 border-t border-white/10 flex gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreateForm(false)}
+                    disabled={creating}
+                    className="h-16 px-12 text-lg border-white/20 bg-gradient-to-r from-slate-800/80 to-slate-900/80 hover:bg-white/10 rounded-3xl flex-1 shadow-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={creating || !isFormValid}
+                    className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl flex-1 shadow-2xl flex items-center gap-3 disabled:opacity-50"
+                  >
+                    {creating ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-6 h-6" />
+                        Create User
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
 
-           
-
-              <div className="pt-8 border-t border-white/10 flex gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowCreateForm(false)}
-                  disabled={creating}
-                  className="h-16 px-12 text-lg border-white/20 bg-gradient-to-r from-slate-800/80 to-slate-900/80 hover:bg-white/10 rounded-3xl flex-1 shadow-xl"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={creating || !isFormValid}
-                  className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl flex-1 shadow-2xl flex items-center gap-3 disabled:opacity-50"
-                >
-                  {creating ? (
-                    <>
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-6 h-6" />
-                      Create User
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
           </motion.div>
         </motion.div>
       )}
