@@ -336,7 +336,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
 
           <motion.button
             onClick={() => setShowCreateForm(true)}
-            disabled={!selectedTenantId || orgsLoading}
+            disabled={(!isVendor && !selectedTenantId) || orgsLoading}
             className="h-16 px-12 text-xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl shadow-2xl hover:shadow-indigo-500/40 flex items-center gap-3 ml-auto disabled:opacity-50"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -601,7 +601,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={creating || createData.organization_id === 0}
+                    disabled={creating}
                     className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl flex-1 shadow-2xl flex items-center gap-3 disabled:opacity-50"
                   >
                     {creating ? (
@@ -646,7 +646,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                 : 'Select a tenant above to get started'
               }
             </p>
-            {selectedTenantId && organizations.length > 0 && (
+            {isVendor && organizations.length > 0 && (
               <motion.button
                 onClick={() => setShowCreateForm(true)}
                 className="h-14 px-12 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl shadow-2xl flex items-center gap-3"
