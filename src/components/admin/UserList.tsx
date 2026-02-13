@@ -159,19 +159,45 @@ const UserList: React.FC = () => {
     }
   }, []);
 
-  const fetchUsers = useCallback(async (tenantId: string) => {
-    setUsersLoading(true);
-    try {
-      const res = await listUsersForTenant();
-      const payload = Array.isArray(res) ? res : [];
-      setUsers(payload);
-    } catch (error) {
-      console.error('Failed to load users:', error);
-      setUsers([]);
-    } finally {
-      setUsersLoading(false);
-    }
-  }, []);
+  // const fetchUsers = useCallback(async () => {
+  //   setUsersLoading(true);
+  //   try {
+  //     const res = await listUsersForTenant();
+  //     const payload = Array.isArray(res) ? res : [];
+  //      console.log('✅ Setting users:', payload.length);
+  //     setUsers(payload);
+  //   } catch (error) {
+  //     console.error('Failed to load users:', error);
+  //     setUsers([]);
+  //   } finally {
+  //     setUsersLoading(false);
+  //   }
+  // }, []);
+
+  const fetchUsers = useCallback(async () => {
+  console.log('🚀 fetchUsers called');
+  setUsersLoading(true);
+  try {
+    const res = await listUsersForTenant();
+    console.log('📥 RAW API Response:', res);
+    
+    // ✅ FIXED: Handle Axios { data: [...] } response
+    const payload = Array.isArray(res?.data) 
+      ? res.data 
+      : Array.isArray(res) 
+      ? res 
+      : [];
+    
+    console.log('✅ Users loaded:', payload.length, payload[0]?.email);
+    setUsers(payload);
+  } catch (error) {
+    console.error('❌ Failed to load users:', error);
+    setUsers([]);
+  } finally {
+    setUsersLoading(false);
+  }
+}, []);
+
 
   useEffect(() => {
     loadCompanies();
@@ -180,7 +206,7 @@ const UserList: React.FC = () => {
   useEffect(() => {
     if (selectedTenantId) {
       loadOrganizations(selectedTenantId);
-      fetchUsers(selectedTenantId);
+      fetchUsers();
     } else {
       setOrganizations([]);
       setUsers([]);
@@ -249,7 +275,7 @@ const UserList: React.FC = () => {
       });
       
       setTimeout(() => setCreateSuccess(''), 3000);
-      await fetchUsers(selectedTenantId);
+      await fetchUsers();
       
     } catch (error: any) {
       console.error('Create user failed:', error);
@@ -439,24 +465,6 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                   Organization <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
-                 {/* <select
-                      value={createData.organization_id.toString()}
-                      onChange={(e) => {
-                        const newId = Number(e.target.value);
-                        console.log('✅ SELECTED:', newId);
-                        setCreateData(prev => ({ ...prev, organization_id: newId }));
-                      }}
-                      disabled={false}  // TEMPORARY
-                      className="w-full h-14 px-6 pr-12 text-lg font-light bg-slate-800 border border-white/20 rounded-3xl text-white"
-                    >
-                      <option value="0">Select Org ({organizations.length})</option>
-                      {organizations.map(org => (
-                        <option key={org.id} value={org.id}>
-                          {org.name} (ID: {org.id})
-                        </option>
-                      ))}
-                    </select> */}
-
                     <select
                         value={String(createData.organization_id)}
                         onChange={(e) => {
