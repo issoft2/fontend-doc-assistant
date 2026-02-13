@@ -109,8 +109,8 @@ export function createUserForTenant(tenant_id: string, payload: Omit<SignupPaylo
   return api.post('/auth/signup/', { tenant_id, ...payload });
 }
 
-export function listUsersForTenant(tenantId: string) {
-  return api.get<MeResponse[]>('/tenants/' + tenantId + '/users/');
+export function listUsersForTenant() {
+  return api.get('/company/users')
 }
 
 
