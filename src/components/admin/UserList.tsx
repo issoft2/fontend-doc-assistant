@@ -333,24 +333,6 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
             </div>
           </div>
           
-          {isVendor && (
-            <div className="relative max-w-md">
-              <select
-                value={selectedTenantId}
-                onChange={(e) => setSelectedTenantId(e.target.value)}
-                disabled={companiesLoading}
-                className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50"
-              >
-                <option value="">Select Tenant</option>
-                {companies.map(company => (
-                  <option key={company.tenant_id} value={company.tenant_id}>
-                    {company.display_name || company.tenant_id}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-5 h-5 text-white/50 absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          )}
 
           <motion.button
             onClick={() => setShowCreateForm(true)}
@@ -425,28 +407,58 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
               </motion.div>
             )}
 
-            {/* ✅ REFINED COMPLETE FORM - Copy/Paste Ready */}
-              <form onSubmit={handleCreateUser} className="space-y-6">
-                {/* Organization - REQUIRED */}
+            {/* New User Form */}
+             <form onSubmit={handleCreateUser} className="space-y-6">
+                {isVendor && (
+                  <div className="relative max-w-md">
+                    <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
+                      <Building2 className="w-4 h-4" />
+                      Tenant <span className="text-red-400">*</span>
+                    </label>
+                    <select
+                      value={selectedTenantId || ''}  // ✅ FIXED: Proper string value
+                      onChange={(e) => setSelectedTenantId(e.target.value)}  // ✅ String state
+                      disabled={companiesLoading}
+                      required
+                      className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50"
+                    >
+                      <option value="">-- Select Tenant --</option>
+                      {companies.map(company => (
+                        <option key={company.tenant_id} value={company.tenant_id}>
+                          🏢 {company.display_name || company.tenant_id}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-5 h-5 text-white/50 absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                )}
+
+                {/* ✅ FIXED: Organization Select - Shows selected org */}
                 <div>
                   <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
                     <Building2 className="w-4 h-4" />
                     Organization <span className="text-red-400">*</span>
                   </label>
-                  <select
-                    value={createData.organization_id.toString()}
-                    onChange={(e) => setCreateData(prev => ({ ...prev, organization_id: Number(e.target.value) || 0 }))}
-                    disabled={orgsLoading || organizations.length === 0}
-                    required
-                    className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50"
-                  >
-                    <option value="0">-- Select Organization --</option>
-                    {organizations.map(org => (
-                      <option key={org.id} value={org.id}>
-                        🏢 {org.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={createData.organization_id ? createData.organization_id.toString() : ''}  // ✅ FIXED: "" when 0
+                      onChange={(e) => setCreateData(prev => ({ 
+                        ...prev, 
+                        organization_id: Number(e.target.value) || 0 
+                      }))}
+                      disabled={orgsLoading || organizations.length === 0}
+                      required
+                      className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] appearance-none cursor-pointer transition-all duration-300 disabled:opacity-50"
+                    >
+                      <option value="">-- Select Organization --</option>
+                      {organizations.map(org => (
+                        <option key={org.id} value={org.id}>
+                          🏢 {org.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-5 h-5 text-white/50 absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
 
                 {/* Names Row */}
@@ -491,7 +503,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                   <input
                     type="email"
                     placeholder="john.doe@company.com"
-                    value={createData.email}
+                    value={createData.email || ''}
                     onChange={(e) => setCreateData({ ...createData, email: e.target.value })}
                     className="w-full h-16 px-6 text-xl font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
                     required
@@ -522,7 +534,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                   </p>
                 </div>
 
-                {/* NEW: DOB + Phone Row */}
+                {/* DOB + Phone Row */}
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-lg font-light text-white/80 mb-3 flex items-center gap-2">
@@ -533,8 +545,8 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                       type="date"
                       value={createData.date_of_birth || ''}
                       onChange={(e) => setCreateData({ ...createData, date_of_birth: e.target.value })}
-                      max={new Date().toISOString().split('T')[0]} // Can't be future date
-                      className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all disabled:opacity-50"
+                      max={new Date().toISOString().split('T')[0]}
+                      className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
                       disabled={creating}
                     />
                   </div>
@@ -545,10 +557,10 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                     </label>
                     <input
                       type="tel"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="+234 800 123 4567"
                       value={createData.phone || ''}
                       onChange={(e) => setCreateData({ ...createData, phone: e.target.value })}
-                      className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all disabled:opacity-50"
+                      className="w-full h-14 px-6 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl transition-all"
                       disabled={creating}
                     />
                   </div>
@@ -561,7 +573,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                     Role <span className="text-red-400">*</span>
                   </label>
                   <select
-                    value={createData.role}
+                    value={createData.role || ''}  // ✅ FIXED: Handle empty string
                     onChange={(e) => setCreateData({ ...createData, role: e.target.value as AssignableRole })}
                     disabled={creating}
                     required
@@ -589,7 +601,7 @@ const getRoleIcon = (role?: string | null): React.ReactNode => {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={creating || !isFormValid}
+                    disabled={creating || createData.organization_id === 0}
                     className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-3xl flex-1 shadow-2xl flex items-center gap-3 disabled:opacity-50"
                   >
                     {creating ? (
