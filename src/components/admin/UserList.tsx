@@ -132,7 +132,13 @@ const UserList: React.FC = () => {
     try {
       const res = await listCompanies();
       // ✅ Safe array extraction
-      const payload = Array.isArray(res) ? res : [];
+   
+      const payload = Array.isArray(res?.data) 
+      ? res.data 
+      : Array.isArray(res) 
+      ? res 
+      : [];
+      
       setCompanies(payload);
       if (payload.length > 0 && !selectedTenantId) {
         setSelectedTenantId(payload[0].tenant_id);
