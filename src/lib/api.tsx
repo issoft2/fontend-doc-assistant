@@ -299,7 +299,7 @@ export function createOrganizationForTenant(tenant_id: string, payload: CreateOr
 
 export function createCollectionForOrganization(payload: {
   tenant_id: string;
-  organization_id: number | null;
+  organization_id: string | null;
   name: string;
   visibility: 'tenant' | 'org' | 'role' | 'user';
   allowed_roles: string[];
