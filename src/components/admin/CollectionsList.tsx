@@ -141,6 +141,12 @@ const handleCreateCollection = async (e: React.FormEvent) => {
     return;
   }
   
+   if (!selectedOrgId) { 
+    setCreateError('Please select an organization');
+    return;
+  }
+  
+
   if (!createData.name.trim()) {
     setCreateError('Collection name required');
     return;
@@ -153,11 +159,10 @@ const handleCreateCollection = async (e: React.FormEvent) => {
   try {
     const payload = {
       tenant_id: selectedTenantId,
-      // ✅ FIXED: Convert string → number | null (matches API type)
-      organization_id: selectedOrgId ? parseInt(selectedOrgId, 10) : null,
+      organization_id: selectedOrgId || null,
       name: createData.name.trim(),
       visibility: createData.visibility,
-      allowed_roles: [] as string[],  // ✅ Type assertion for empty arrays
+      allowed_roles: [] as string[],  
       allowed_user_ids: [] as string[],
     };
 
