@@ -12,7 +12,8 @@ import {
   fetchOrganizations, 
   listCollectionsForTenant, 
   createCollectionForOrganization,
-  listCompanies 
+  listCompanies,
+  listCollectionsForOrg 
 } from '@/lib/api';
 import { CollectionOut, OrganizationOut } from '@/lib/api';
 import { useAuthStore } from '@/useAuthStore';
@@ -106,8 +107,9 @@ const CollectionList: React.FC = () => {
     if (!tenantId) return;
     setCollectionsLoading(true);
     try {
-      const res: any = await listCollectionsForTenant(tenantId);
+      const res: any = await listCollectionsForOrg();
       const payload = Array.isArray(res) ? res : res?.data || res || [];
+      
       setCollections(Array.isArray(payload) ? payload : []);
     } catch (e: any) {
       console.error('Failed to load collections:', e);
