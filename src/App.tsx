@@ -15,14 +15,14 @@ import UserList from "./components/admin/UserList";
 import DocumentIngestion from "./components/admin/DocumentIngestion";
 
 
-// const ReDocRedirect: React.FC = () => {
-//   useEffect(() => {
-//     window.location.href = 'https://askmi.duckdns.org/redoc';
-//   }, []);
-//   return <div>Redirecting to ReDoc...</div>;
-// };
+const ReDocRedirect: React.FC = () => {
+  useEffect(() => {
+    window.location.href = 'https://askmi.duckdns.org/redoc';
+  }, []);
+  return <div>Redirecting to ReDoc...</div>;
+};
 
-// const DocsRedirect: React.FC = () => <Navigate to="http://askmi.duckdns.org/docs" replace />;
+const DocsRedirect: React.FC = () => <Navigate to="http://askmi.duckdns.org/docs" replace />;
 
 const Home = () => (
   <>
@@ -58,8 +58,8 @@ const App = () => {
         <Route path="ingestion" element={<DocumentIngestion />} />
       </Route>
       
-       <Route path="/docs/*" element={<Navigate to="/docs" replace />} />
-      <Route path="/redoc/*" element={<Navigate to="/redoc" replace />} />
+       <Route path="/docs/*" element={<DocsRedirect />} />
+      <Route path="/redoc/*" element={<ReDocRedirect />} />
   
 
 
