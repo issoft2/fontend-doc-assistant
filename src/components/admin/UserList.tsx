@@ -16,26 +16,11 @@ import {
 } from '@/lib/api';
 import { SignupPayload, MeResponse, OrganizationOut } from '@/lib/api';
 import { useAuthStore } from '@/useAuthStore';
+import {ALL_ASSIGNABLE_ROLES, AssignableRole  } from '@/lib/assignableRoles';
 
-const allAssignableRoles = [
-  'employee',
-  'sub_hr',
-  'sub_finance',
-  'sub_operations',
-  'sub_md',
-  'sub_admin',
-  'group_hr',
-  'group_finance',
-  'group_operation',
-  'group_production',
-  'group_marketing',
-  'group_legal',
-  'group_exe',
-  'group_admin',
-  'group_gmd',
-] as const;
-
-type AssignableRole = typeof allAssignableRoles[number];
+// Now use everywhere:
+const allAssignableRoles = ALL_ASSIGNABLE_ROLES; // ✅ Type-safe, reusable
+type AssignableRoleType = AssignableRole; // ✅ Perfect typing
 
 interface Company {
   tenant_id: string;

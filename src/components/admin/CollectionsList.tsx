@@ -1,28 +1,27 @@
-// src/pages/admin/CollectionList.tsx - ✅ PERFECT & PRODUCTION READY
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, Building2 } from 'lucide-react';
-import { 
-  Plus, Eye, Users, Shield, Database, ArrowLeft, ChevronDown 
-} from 'lucide-react';
+import { Loader2, CheckCircle, Building2, Users, Eye, Plus, Shield, Database, ArrowLeft, ChevronDown, CheckCircle2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   fetchOrganizations, 
   listCollectionsForTenant, 
   createCollectionForOrganization,
   listCompanies,
-  listCollectionsForOrg 
+  listCollectionsForOrg,
+  updateCollectionAccess 
 } from '@/lib/api';
 import { CollectionOut, OrganizationOut } from '@/lib/api';
 import { useAuthStore } from '@/useAuthStore';
+import { ALL_ASSIGNABLE_ROLES, AssignableRole } from '@/lib/assignableRoles';
 
 interface User {
+  id: string;
+  email: string;
   role?: string | null;
   tenant_id?: string | null;
-  organization_id?: string| null;
-  [key: string]: any;
+  organization_id?: string | null;
 }
 
 interface Company {
@@ -35,23 +34,23 @@ const CollectionList: React.FC = () => {
   const authStore = useAuthStore() as { user: User | null };
   const user = authStore.user;
   const isVendor = user?.role === 'vendor';
-  
-  // ✅ SAME TENANT LOGIC AS OrganizationsList
+
+  // Tenant/Org state
   const [selectedTenantId, setSelectedTenantId] = useState<string>('');
   const [companies, setCompanies] = useState<Company[]>([]);
-  
-  // Organization & Collections
   const [organizations, setOrganizations] = useState<OrganizationOut[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<string>('');
+
+  // Collections state
   const [collections, setCollections] = useState<CollectionOut[]>([]);
   const [search, setSearch] = useState('');
-  
+
   // Loading states
   const [companiesLoading, setCompaniesLoading] = useState(false);
   const [orgsLoading, setOrgsLoading] = useState(false);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
-  
-  // Create form
+
+  // Create modal state
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createData, setCreateData] = useState({
     name: '',
@@ -61,40 +60,51 @@ const CollectionList: React.FC = () => {
   const [createError, setCreateError] = useState('');
   const [createSuccess, setCreateSuccess] = useState('');
 
-  // ✅ Auto-select tenant for non-vendors (SAME AS OrganizationsList)
+  // ✅ ACCESS MODAL STATE (NEW)
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const [selectedCollection, setSelectedCollection] = useState<CollectionOut | null>(null);
+  const [accessLoading, setAccessLoading] = useState(false);
+  const [accessUsers, setAccessUsers] = useState<User[]>([]); // TODO: Load from API
+  const [accessSelectedUserIds, setAccessSelectedUserIds] = useState<string[]>([]);
+  const [accessSelectedRoles, setAccessSelectedRoles] = useState<string[]>([]);
+  const [accessValidationError, setAccessValidationError] = useState('');
+  const [accessMessage, setAccessMessage] = useState('');
+  const [accessError, setAccessError] = useState('');
+
+  // Auto-select tenant for non-vendors
   useEffect(() => {
     if (!isVendor && user?.tenant_id) {
       setSelectedTenantId(user.tenant_id);
     }
   }, [isVendor, user?.tenant_id]);
 
-  // Load companies for vendor (SAME AS OrganizationsList)
+  // Load companies (vendor only)
   const loadCompanies = useCallback(async () => {
     if (!isVendor) return;
     setCompaniesLoading(true);
     try {
-      const res: any = await listCompanies();
+      const res = await listCompanies();
       const payload = Array.isArray(res) ? res : res?.data || [];
       setCompanies(Array.isArray(payload) ? payload : []);
       if (payload.length > 0 && !selectedTenantId) {
         setSelectedTenantId(payload[0].tenant_id);
       }
-    } catch (e: any) {
+    } catch (e) {
       console.error('Failed to load companies:', e);
     } finally {
       setCompaniesLoading(false);
     }
   }, [isVendor, selectedTenantId]);
 
-  // Load organizations for tenant (SAME AS OrganizationsList)
+  // Load organizations
   const loadOrganizations = useCallback(async (tenantId: string) => {
     if (!tenantId) return;
     setOrgsLoading(true);
     try {
-      const res: any = await fetchOrganizations(tenantId);
-      const payload = Array.isArray(res) ? res : res?.data || res || [];
+      const res = await fetchOrganizations(tenantId);
+    const payload = Array.isArray(res) ? res : (res as any)?.data || [];
       setOrganizations(Array.isArray(payload) ? payload : []);
-    } catch (e: any) {
+    } catch (e) {
       console.error('Failed to load orgs:', e);
       setOrganizations([]);
     } finally {
@@ -102,22 +112,73 @@ const CollectionList: React.FC = () => {
     }
   }, []);
 
-  // Load collections for tenant
+  // Load collections
   const fetchCollections = useCallback(async (tenantId: string) => {
     if (!tenantId) return;
     setCollectionsLoading(true);
     try {
-      const res: any = await listCollectionsForOrg();
-      const payload = Array.isArray(res) ? res : res?.data || res || [];
-      
+      const res = await listCollectionsForOrg();
+      const payload = Array.isArray(res) ? res : res?.data || [];
       setCollections(Array.isArray(payload) ? payload : []);
-    } catch (e: any) {
+    } catch (e) {
       console.error('Failed to load collections:', e);
       setCollections([]);
     } finally {
       setCollectionsLoading(false);
     }
   }, []);
+
+  // ✅ ACCESS MODAL FUNCTIONS (NEW)
+  const openAccessModal = useCallback((collection: CollectionOut) => {
+    setSelectedCollection(collection);
+    setAccessSelectedUserIds(collection.allowed_user_ids || []);
+    setAccessSelectedRoles(collection.allowed_roles || []);
+    setAccessMessage('');
+    setAccessError('');
+    setAccessValidationError('');
+    setShowAccessModal(true);
+  }, []);
+
+  const closeAccessModal = useCallback(() => {
+    setShowAccessModal(false);
+    setSelectedCollection(null);
+    setAccessSelectedUserIds([]);
+    setAccessSelectedRoles([]);
+  }, []);
+
+  const saveCollectionAccess = async () => {
+    if (!selectedCollection) return;
+
+    if (accessSelectedUserIds.length === 0 && accessSelectedRoles.length === 0) {
+      setAccessValidationError('At least one user or one role must be selected.');
+      return;
+    }
+
+    setAccessLoading(true);
+    setAccessValidationError('');
+
+    try {
+      // TODO: Replace with real API call
+      await updateCollectionAccess(selectedCollection.id, {
+        allowed_user_ids: accessSelectedUserIds,
+        allowed_roles: accessSelectedRoles as AssignableRole[],
+      });
+      
+      console.log('✅ Would save:', {
+        collectionId: selectedCollection.id,
+        allowed_user_ids: accessSelectedUserIds,
+        allowed_roles: accessSelectedRoles,
+      });
+
+      setAccessMessage('✅ Access updated successfully!');
+      await fetchCollections(selectedTenantId!);
+      setTimeout(closeAccessModal, 1500);
+    } catch (error: any) {
+      setAccessError(error.response?.data?.detail || 'Failed to update access');
+    } finally {
+      setAccessLoading(false);
+    }
+  };
 
   // Effects
   useEffect(() => {
@@ -132,61 +193,46 @@ const CollectionList: React.FC = () => {
       setOrganizations([]);
       setCollections([]);
     }
-  }, [selectedTenantId]);
+  }, [selectedTenantId, loadOrganizations, fetchCollections]);
 
-
-const handleCreateCollection = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (!selectedTenantId) {
-    setCreateError('Please select a tenant first');
-    return;
-  }
-  
-   if (!selectedOrgId) { 
-    setCreateError('Please select an organization');
-    return;
-  }
-  
-
-  if (!createData.name.trim()) {
-    setCreateError('Collection name required');
-    return;
-  }
-
-  setCreating(true);
-  setCreateError('');
-  setCreateSuccess('');
-
-  try {
-    const payload = {
-      tenant_id: selectedTenantId,
-      organization_id: selectedOrgId || null,
-      name: createData.name.trim(),
-      visibility: createData.visibility,
-      allowed_roles: [] as string[],  
-      allowed_user_ids: [] as string[],
-    };
-
-    console.log('📤 Creating collection:', payload);
-    await createCollectionForOrganization(payload);
+  const handleCreateCollection = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    setCreateSuccess('✅ Collection created successfully!');
-    setCreateData({ name: '', visibility: 'tenant' });
-    setSelectedOrgId('');
-    await fetchCollections(selectedTenantId);
-    
-  } catch (error: any) {
-    console.error('❌ Create failed:', error);
-    const errorMsg = Array.isArray(error.response?.data)
-      ? error.response.data.map((e: any) => e.msg).join(', ')
-      : error.response?.data?.detail || 'Failed to create collection';
-    setCreateError(errorMsg);
-  } finally {
-    setCreating(false);
-  }
-};
+    if (!selectedTenantId) return setCreateError('Please select a tenant first');
+    if (!selectedOrgId) return setCreateError('Please select an organization');
+    if (!createData.name.trim()) return setCreateError('Collection name required');
 
+    setCreating(true);
+    setCreateError('');
+    setCreateSuccess('');
+
+    try {
+      const payload = {
+        tenant_id: selectedTenantId,
+        organization_id: selectedOrgId,
+        name: createData.name.trim(),
+        visibility: createData.visibility,
+        allowed_roles: [],
+        allowed_user_ids: [],
+      };
+
+      console.log('📤 Creating collection:', payload);
+      await createCollectionForOrganization(payload);
+      
+      setCreateSuccess('✅ Collection created successfully!');
+      setCreateData({ name: '', visibility: 'tenant' });
+      setSelectedOrgId('');
+      await fetchCollections(selectedTenantId);
+    } catch (error: any) {
+      console.error('❌ Create failed:', error);
+      const errorMsg = Array.isArray(error.response?.data)
+        ? error.response.data.map((e: any) => e.msg).join(', ')
+        : error.response?.data?.detail || 'Failed to create collection';
+      setCreateError(errorMsg);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const filteredCollections = collections.filter(col => 
     col.name.toLowerCase().includes(search.toLowerCase())
@@ -220,6 +266,7 @@ const handleCreateCollection = async (e: React.FormEvent) => {
   }
 
   return (
+    
     <motion.div className="w-full h-full space-y-12 p-6 lg:p-12 isolate bg-transparent relative z-10">
       {/* Header */}
       <motion.div 
@@ -531,20 +578,194 @@ const handleCreateCollection = async (e: React.FormEvent) => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-6 border-t border-white/10">
-                  <Button variant="outline" size="sm" className="flex-1 h-12 border-white/20 bg-gradient-to-r from-slate-800/80 to-slate-900/80 hover:bg-white/10 rounded-2xl font-medium text-sm">
-                    <Eye className="w-4 h-4 mr-2" />
-                    View
-                  </Button>
-                  <Button size="sm" className="h-12 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl font-medium text-sm shadow-lg">
-                    Manage
-                  </Button>
+
+                <div className="space-y-3 pt-6 border-t border-white/10">
+                  {/* Access Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-xs text-white/60">Access:</span>
+                    {collection.allowed_roles?.length || collection.allowed_user_ids?.length ? (
+                      <>
+                        {collection.allowed_roles?.slice(0, 2).map(role => (
+                          <span key={role} className="px-2 py-1 bg-emerald-500/20 border border-emerald-400/30 rounded-lg text-xs text-emerald-300">
+                            {role.replace(/_/g, ' ').toUpperCase()}
+                          </span>
+                        ))}
+                        {collection.allowed_user_ids?.length ? (
+                          <span className="px-2 py-1 bg-blue-500/20 border border-blue-400/30 rounded-lg text-xs text-blue-300 flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            {collection.allowed_user_ids.length} users
+                          </span>
+                        ) : null}
+                        {collection.allowed_roles && collection.allowed_roles.length > 2 && (
+                          <span className="text-xs text-white/50">+{collection.allowed_roles.length - 2} more</span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-emerald-400 font-medium text-xs">Everyone</span>
+                    )}
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 h-11 border-white/20 bg-gradient-to-r from-slate-800/80 to-slate-900/80 hover:bg-white/10 rounded-xl font-medium text-sm"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="h-11 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl font-medium text-sm shadow-lg"
+                      onClick={() => openAccessModal(collection)}
+                    >
+                      <Users className="w-4 h-4 mr-1" />
+                      Access
+                    </Button>
+                  </div>
                 </div>
+
               </div>
             </motion.div>
           ))
         )}
       </motion.div>
+
+      {/* ✅ ACCESS CONTROL MODAL - ADD HERE */}
+      {showAccessModal && selectedCollection && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && closeAccessModal()}
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-md backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-3xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+              <div>
+                <h2 className="text-lg font-semibold text-white">Collection Access</h2>
+                <p className="text-xs text-white/60">{selectedCollection.name}</p>
+              </div>
+              <button
+                onClick={closeAccessModal}
+                className="p-2 rounded-xl hover:bg-white/10 transition-all"
+              >
+                <X className="w-5 h-5 text-white/60" />
+              </button>
+            </div>
+
+            {/* Loading */}
+            {accessLoading && (
+              <div className="flex items-center justify-center py-12 text-white/50">
+                <Loader2 className="w-6 h-6 animate-spin mr-3" />
+                <span>Saving access...</span>
+              </div>
+            )}
+
+            {/* Content */}
+            {!accessLoading && (
+              <div className="space-y-4">
+                {/* Users Select */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-white/80 flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Users with access
+                  </label>
+                  <select
+                    multiple
+                    value={accessSelectedUserIds}
+                    onChange={(e) => setAccessSelectedUserIds(
+                      Array.from(e.target.selectedOptions, option => option.value)
+                    )}
+                    className="w-full h-32 rounded-xl border border-white/20 px-3 py-2 text-sm bg-white/5 backdrop-blur-sm text-white resize-vertical focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/30"
+                  >
+                    {/* TODO: Replace with real users */}
+                    <option value="user1">john@example.com (employee)</option>
+                    <option value="user2">jane@example.com (group_hr)</option>
+                    <option value="user3">admin@example.com (group_admin)</option>
+                  </select>
+                  <p className="text-xs text-white/50">Hold Ctrl/Cmd to select multiple</p>
+                </div>
+
+                {/* Roles Select */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-white/80 flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Roles with access
+                  </label>
+                  <select
+                    multiple
+                    value={accessSelectedRoles}
+                    onChange={(e) => setAccessSelectedRoles(
+                      Array.from(e.target.selectedOptions, option => option.value)
+                    )}
+                    className="w-full h-24 rounded-xl border border-white/20 px-3 py-2 text-sm bg-white/5 backdrop-blur-sm text-white resize-vertical focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/30"
+                  >
+                    {ALL_ASSIGNABLE_ROLES.map(role => (
+                      <option key={role} value={role}>
+                        {role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-white/50">Users with these roles can query</p>
+                </div>
+
+                {/* Validation Error */}
+                {accessValidationError && (
+                  <div className="p-3 bg-red-500/20 border border-red-400/30 rounded-xl">
+                    <p className="text-xs text-red-300">{accessValidationError}</p>
+                  </div>
+                )}
+
+                {/* Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    onClick={closeAccessModal}
+                    disabled={accessLoading}
+                    className="flex-1 h-12 bg-white/5 border-white/20 hover:bg-white/10 text-white rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={saveCollectionAccess}
+                    disabled={accessLoading || (accessSelectedUserIds.length === 0 && accessSelectedRoles.length === 0)}
+                    className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl font-medium shadow-lg flex items-center gap-2"
+                  >
+                    {accessLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Access'
+                    )}
+                  </Button>
+                </div>
+
+                {/* Messages */}
+                {accessMessage && (
+                  <div className="p-3 bg-emerald-500/20 border border-emerald-400/30 rounded-xl flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <p className="text-xs text-emerald-300">{accessMessage}</p>
+                  </div>
+                )}
+                {accessError && (
+                  <div className="p-3 bg-red-500/20 border border-red-400/30 rounded-xl">
+                    <p className="text-xs text-red-300">{accessError}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
+
+      
     </motion.div>
   );
 };
