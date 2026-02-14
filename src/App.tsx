@@ -13,22 +13,16 @@ import OrganizationsList from "./components/admin/OrganizationsList"
 import CollectionList from "./components/admin/CollectionsList";
 import UserList from "./components/admin/UserList";
 import DocumentIngestion from "./components/admin/DocumentIngestion";
-// import Dashboard from "./pages/admin_dashboard"; // ✅ Uncommented
-// import TenantForm from "./pages/TenantForm"; // ✅ Add your pages
 
-const DocsRedirect: React.FC = () => {
-  useEffect(() => {
-    window.location.href = 'https://askmi.duckdns.org/docs';
-  }, []);
-  return <div>Redirecting to API Docs...</div>;
-};
 
-const ReDocRedirect: React.FC = () => {
-  useEffect(() => {
-    window.location.href = 'https://askmi.duckdns.org/redoc';
-  }, []);
-  return <div>Redirecting to ReDoc...</div>;
-};
+// const ReDocRedirect: React.FC = () => {
+//   useEffect(() => {
+//     window.location.href = 'https://askmi.duckdns.org/redoc';
+//   }, []);
+//   return <div>Redirecting to ReDoc...</div>;
+// };
+
+// const DocsRedirect: React.FC = () => <Navigate to="http://askmi.duckdns.org/docs" replace />;
 
 const Home = () => (
   <>
@@ -63,8 +57,10 @@ const App = () => {
         <Route path="users" element={<UserList />} />
         <Route path="ingestion" element={<DocumentIngestion />} />
       </Route>
-       <Route path="/docs/*" element={<DocsRedirect />} />
-      <Route path="/redoc/*" element={<ReDocRedirect  />} />
+      
+       <Route path="/docs/*" element={<Navigate to="/docs" replace />} />
+      <Route path="/redoc/*" element={<Navigate to="/redoc" replace />} />
+  
 
 
       {/* 404 */}
