@@ -205,7 +205,7 @@ const UserList: React.FC = () => {
     e.preventDefault();
       const finalTenantId = isVendor ? createData.tenant_id : selectedTenantId;
 
-    if (!finalTenantId) {
+    if (!selectedTenantId) {
       setCreateError('Please select a tenant first');
       return;
     }
@@ -244,7 +244,7 @@ const UserList: React.FC = () => {
         phone: createData.phone?.trim() || undefined,
         role: createData.role!,
         organization_id: createData.organization_id,
-       tenant_id: finalTenantId,
+       tenant_id: selectedTenantId,
       };
 
       await signup(payload);
