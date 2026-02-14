@@ -302,36 +302,6 @@ const handleCreateCollection = async (e: React.FormEvent) => {
       {selectedTenantId && (
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center">
-            <div className="flex-1 max-w-md">
-              <label className="block text-sm font-medium text-white/80 mb-3 flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                Organization
-              </label>
-              <div className="relative">
-                <select
-                  value={selectedOrgId}
-                  onChange={(e) => setSelectedOrgId(e.target.value)}
-                  disabled={orgsLoading}
-                  className="w-full h-14 px-6 pr-12 text-lg font-light 
-                            bg-gradient-to-r from-slate-800/90 to-slate-900/90 
-                            border border-white/20 rounded-3xl backdrop-blur-xl 
-                            text-white placeholder-white/40 
-                            focus:border-emerald-400/60 focus:ring-4 focus:ring-emerald-400/20 
-                            shadow-2xl hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]
-                            appearance-none cursor-pointer transition-all duration-300
-                            disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">--Select ---</option>
-                  {organizations.map(org => (
-                    <option key={org.id} value={org.id}>
-                      🏢 {org.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-5 h-5 text-white/50 absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-            </div>
-
             {/* Search */}
             <div className="relative flex-1 max-w-md">
               <input
@@ -392,6 +362,28 @@ const handleCreateCollection = async (e: React.FormEvent) => {
             )}
 
             <form onSubmit={handleCreateCollection} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-lg font-light text-white/80 block mb-3">
+                  <Building2 className="w-4 h-4" />
+                  Organization
+                </label>
+                <select
+                  value={selectedOrgId}
+                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                  disabled={orgsLoading}
+                  className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl appearance-none transition-all"
+                >
+                  <option value="">--Select ---</option>
+                  {organizations.map(org => (
+                    <option key={org.id} value={org.id}>
+                      🏢 {org.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-5 h-5 text-white/50 absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
+             
+            </div>
+
               <div className="space-y-2">
                 <label className="text-lg font-light text-white/80 block mb-3">
                   Collection Name <span className="text-emerald-400">*</span>
