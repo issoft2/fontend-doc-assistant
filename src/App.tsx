@@ -62,11 +62,10 @@ const App = () => {
         <Route path="collections" element={<CollectionList />} />
         <Route path="users" element={<UserList />} />
         <Route path="ingestion" element={<DocumentIngestion />} />
-     
-        <Route path="/docs/*" element={<DocsRedirect />} />
-        <Route path="/redoc/*" element={<ReDocRedirect  />} />
-
       </Route>
+       <Route path="/docs/*" element={<DocsRedirect />} />
+      <Route path="/redoc/*" element={<ReDocRedirect  />} />
+
 
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
