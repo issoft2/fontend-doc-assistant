@@ -319,7 +319,7 @@ const handleCreateCollection = async (e: React.FormEvent) => {
                             appearance-none cursor-pointer transition-all duration-300
                             disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value="">🌐 Tenant-wide</option>
+                  <option value="">--Select ---</option>
                   {organizations.map(org => (
                     <option key={org.id} value={org.id}>
                       🏢 {org.name}
@@ -364,6 +364,7 @@ const handleCreateCollection = async (e: React.FormEvent) => {
               </h2>
               <motion.button
                 onClick={() => setShowCreateForm(false)}
+                disabled={!selectedOrgId}
                 className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
                 whileHover={{ scale: 1.1 }}
               >
