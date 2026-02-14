@@ -16,6 +16,20 @@ import DocumentIngestion from "./components/admin/DocumentIngestion";
 // import Dashboard from "./pages/admin_dashboard"; // ✅ Uncommented
 // import TenantForm from "./pages/TenantForm"; // ✅ Add your pages
 
+const DocsRedirect: React.FC = () => {
+  useEffect(() => {
+    window.location.href = 'https://askmi.duckdns.org/docs';
+  }, []);
+  return <div>Redirecting to API Docs...</div>;
+};
+
+const ReDocRedirect: React.FC = () => {
+  useEffect(() => {
+    window.location.href = 'https://askmi.duckdns.org/redoc';
+  }, []);
+  return <div>Redirecting to ReDoc...</div>;
+};
+
 const Home = () => (
   <>
     <Hero
@@ -49,13 +63,9 @@ const App = () => {
         <Route path="users" element={<UserList />} />
         <Route path="ingestion" element={<DocumentIngestion />} />
      
+        <Route path="/docs/*" element={<DocsRedirect />} />
+        <Route path="/redoc/*" element={<ReDocRedirect  />} />
 
-
-        {/* <Route index element={<Dashboard />} /> */}
-        {/* <Route path="ingest" element={<Dashboard />} />  */}
-        {/* // <Route path="companies" element={<Dashboard />} />  */}
-        {/* <Route path="users" element={<Dashboard />} /> Users */}
-        {/* <Route path="tenant" element={<TenantForm />} /> */}
       </Route>
 
       {/* 404 */}
