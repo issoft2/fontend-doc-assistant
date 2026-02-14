@@ -15,14 +15,20 @@ import UserList from "./components/admin/UserList";
 import DocumentIngestion from "./components/admin/DocumentIngestion";
 
 
-const ReDocRedirect: React.FC = () => {
-  useEffect(() => {
-    window.location.href = 'https://askmi.duckdns.org/redoc';
-  }, []);
-  return <div>Redirecting to ReDoc...</div>;
-};
+  const DocsRedirect: React.FC = () => {
+    useEffect(() => {
+      // ✅ FULL EXTERNAL URL - window.location bypasses React Router
+      window.location.href = '/docs';  // Let nginx proxy this
+    }, []);
+    return <div className="p-8 text-center text-white">Opening API Docs...</div>;
+  };
 
-const DocsRedirect: React.FC = () => <Navigate to="http://askmi.duckdns.org/docs" replace />;
+  const ReDocRedirect: React.FC = () => {
+    useEffect(() => {
+      window.location.href = '/redoc';
+    }, []);
+    return <div className="p-8 text-center text-white">Opening ReDoc...</div>;
+  };
 
 const Home = () => (
   <>
@@ -58,8 +64,8 @@ const App = () => {
         <Route path="ingestion" element={<DocumentIngestion />} />
       </Route>
       
-       <Route path="/docs/*" element={<DocsRedirect />} />
-      <Route path="/redoc/*" element={<ReDocRedirect />} />
+       <Route path="/docs" element={<DocsRedirect />} />
+       <Route path="/redoc" element={<ReDocRedirect />} />
   
 
 
