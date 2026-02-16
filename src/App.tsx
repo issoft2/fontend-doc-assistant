@@ -10,7 +10,7 @@ import NotFound from "./pages/notFound";
 import TenantConfigForm from "./components/admin/TenantConfigurationForm";
 import TenantsList from "./components/admin/TenantsList";
 import OrganizationsList from "./components/admin/OrganizationsList"
-import CollectionList from "./components/admin/CollectionsList";
+import CollectionList from "./components/admin/CollectionModule/CollectionList";
 import UserList from "./components/admin/UserList";
 import DocumentIngestion from "./components/admin/DocumentIngestion";
 
