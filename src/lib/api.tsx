@@ -97,6 +97,8 @@ export interface CollectionOut {
   allowed_user_ids: string[];
   created_at: string; 
   updated_at: string;
+  tenant_name: string;
+  organization_name: string;
 }
 
 export interface CreateOrganizationPayload {
