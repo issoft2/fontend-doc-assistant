@@ -43,3 +43,5 @@ const CollectionList: React.FC = () => {
     </div>
   );
 };
+
+export default CollectionList
