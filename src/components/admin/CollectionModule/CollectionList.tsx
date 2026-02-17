@@ -41,7 +41,7 @@ const CollectionList: React.FC = () => {
           orgName: state.organizationName,
         }}
         isVendor={isVendor}
-        // selectedTenantId={state.selectedTenantId}
+        selectedTenantId={state.selectedTenantId}
         onBack={() => navigate(-1)}
         onCreateClick={() => setCreateOpen(true)}
       />
