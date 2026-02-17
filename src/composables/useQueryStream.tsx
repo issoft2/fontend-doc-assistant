@@ -98,7 +98,7 @@ export function useQueryStream() {
         signal: controller.signal,
       });
 
-      // ✅ FIX 1: Handle 401/403 without logout (parent handles it)
+      // ✅ FIX 1: Handle 401 without logout (parent handles it)
       if (response.status === 401) {
         setStatus('Authentication failed');
         setIsStreaming(false);
