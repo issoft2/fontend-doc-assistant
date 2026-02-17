@@ -159,19 +159,16 @@ const TenantsList: React.FC<TenantListProps> = ({ className = '' }) => {
         }}
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+          {isVendor && (
           <div>
             <h1 className="text-4xl lg:text-5xl font-light mb-4 bg-gradient-to-r from-white via-[#9b87f5] to-purple-400 bg-clip-text text-transparent drop-shadow-2xl">
               Tenants
             </h1>
             <p className="text-xl lg:text-2xl text-white/60 font-light max-w-2xl leading-relaxed">
-              {isVendor 
-                ? 'All registered tenants across your platform (Vendor view)'
-                : userTenantId 
-                  ? `Your organization: <span className="text-[#9b87f5] font-semibold">${userTenantId}</span>`
-                  : 'No tenant assigned to your account'
-              }
+                All registered tenants across your platform (Vendor view)
             </p>
           </div>
+        )}
           
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}

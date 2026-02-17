@@ -339,7 +339,7 @@ const DocumentIngestion: React.FC = () => {
           </motion.button>
           <div>
             <h1 className="text-4xl lg:text-5xl font-light bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
-              Document Ingestion
+              Data Ingestion
             </h1>
             <p className="text-xl text-white/60 mt-2">Upload files and connect Google Drive</p>
           </div>
