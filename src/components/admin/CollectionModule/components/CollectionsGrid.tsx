@@ -1,6 +1,6 @@
 import { CollectionOut } from "@/lib/api";
 import { Database, Plus } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { CollectionCard } from "./CollectionsCard";
 import { motion } from "framer-motion";
 
@@ -19,6 +19,8 @@ export const CollectionsGrid: React.FC<Props> = ({
   onCreateClick,
   canCreate = false,
 }) => {
+  const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
+
   if (loading) {
     return (
       <div className="flex justify-center py-24">
@@ -31,9 +33,11 @@ export const CollectionsGrid: React.FC<Props> = ({
     return (
       <div className="text-center py-24">
         <h3 className="text-xl text-white/60 mb-4">No Collections Yet</h3>
+
         {canCreate && (
           <button className="btn-primary inline-flex items-center" onClick={onCreateClick}>
-            <Plus className="w-5 h-5 mr-2" /> Create First Collection
+            <Plus className="w-5 h-5 mr-2" />
+            Create First Collection
           </button>
         )}
       </div>
@@ -42,7 +46,7 @@ export const CollectionsGrid: React.FC<Props> = ({
 
   return (
     <motion.div
-      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6 lg:p-8 xl:p-12 max-w-7xl mx-auto"
+      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-w-7xl mx-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}
@@ -52,7 +56,11 @@ export const CollectionsGrid: React.FC<Props> = ({
           key={collection.id}
           collection={collection}
           index={index}
-          onAccessClick={onAccessClick}
+          onAccessClick={(col) => {
+            setActiveCollectionId(col.id);
+            onAccessClick(col);
+          }}
+         
         />
       ))}
     </motion.div>
