@@ -1,4 +1,3 @@
-// src/pages/admin/DocumentIngestion.tsx - COMPLETE INGESTION
 import React, { useState, useEffect, useRef, useCallback, use } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -9,14 +8,10 @@ import {
   Upload, 
   FileText, 
   Cloud,
-  ChevronDown,
-  CheckCircle,
-  X,
-  Folder 
+
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  configureTenantPayload,
   uploadDocument,
   getGoogleDriveAuthUrl,
   getGoogleDriveStatus,
@@ -51,22 +46,13 @@ const DocumentIngestion: React.FC = () => {
   const currentTenantId = currentUser?.tenant_id ?? null;
   const permissions = currentUser?.permissions ?? [];
 
+  
 
   const hasPermission = (p: string) => permissions.includes(p);
 
 
-  const isVendor = currentUser?.role === 'vendor';
-
   const canUpload = hasPermission('DOC:UPLOAD');
 
-  // Tenant Config (Vendor only)
-  const [tenantId, setTenantId] = useState('');
-  const [tenantName, setTenantName] = useState('');
-  const [tenantPlan, setTenantPlan] = useState<'free_trial' | 'starter' | 'pro' | 'enterprise'>('free_trial');
-  const [tenantSubscriptionStatus, setTenantSubscriptionStatus] = useState<'trialing' | 'active' | 'expired' | 'cancelled'>('trialing');
-  const [configureLoading, setConfigureLoading] = useState(false);
-  const [configureMessage, setConfigureMessage] = useState('');
-  const [configureError, setConfigureError] = useState('');
 
   // Collections + Upload
   const [collections, setCollections] = useState<{id: string; name: string}[]>([]);
@@ -112,32 +98,7 @@ const DocumentIngestion: React.FC = () => {
     }
   }, []);
 
-  // Vendor: configure tenant
-  const onConfigure = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isVendor) return;
-
-    setConfigureMessage('');
-    setConfigureError('');
-    setConfigureLoading(true);
-    
-    try {
-      await configureTenantPayload({
-        tenant_id: tenantId,
-        plan: tenantPlan,
-        subscription_status: tenantSubscriptionStatus,
-      });
-      setConfigureMessage(`Tenant "${tenantId}" configured.`);
-      setTenantId('');
-      setTenantName('');
-      setTenantPlan('free_trial');
-      setTenantSubscriptionStatus('trialing');
-    } catch (e: any) {
-      setConfigureError(e?.response?.data?.detail || 'Failed to configure tenant');
-    } finally {
-      setConfigureLoading(false);
-    }
-  };
+ 
 
   // File upload handlers
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,7 +172,11 @@ const DocumentIngestion: React.FC = () => {
       setFile(null);
       setDocTitle('');
     } catch (e: any) {
-      setUploadError(e?.response?.data?.detail || 'Failed to upload document.');
+      if (e.response?.status === 403){
+        setUploadError("You do have permission to INGEST DATA")
+      } else{
+              setUploadError(e?.response?.data?.detail || 'Failed to upload document.');
+      }
     } finally {
       setUploadLoading(false);
     }
@@ -357,81 +322,7 @@ const DocumentIngestion: React.FC = () => {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 space-y-8 lg:space-y-0">
-        {/* Vendor Tenant Config */}
-        {isVendor && (
-          <motion.section 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-8 lg:p-12 overflow-hidden"
-            style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)' }}
-          >
-            <h2 className="text-2xl font-[500] mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Tenant Configuration
-            </h2>
-            <form onSubmit={onConfigure} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-lg font-light text-white/80">Tenant ID <span className="text-emerald-400">*</span></label>
-                  <input
-                    value={tenantId}
-                    onChange={(e) => setTenantId(e.target.value)}
-                    className="w-full h-14 px-6 text-lg font-light bg-white/10 border border-white/20 rounded-3xl backdrop-blur-sm text-white placeholder-white/40 focus:border-emerald-400/50 shadow-xl"
-                    placeholder="acme_corp"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-lg font-light text-white/80">Display Name</label>
-                  <input
-                    value={tenantName}
-                    onChange={(e) => setTenantName(e.target.value)}
-                    className="w-full h-14 px-6 text-lg font-light bg-white/10 border border-white/20 rounded-3xl backdrop-blur-sm text-white placeholder-white/40 focus:border-emerald-400/50 shadow-xl"
-                    placeholder="Acme Corporation"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-lg font-light text-white/80">Plan</label>
-                  <select
-                    value={tenantPlan}
-                    onChange={(e) => setTenantPlan(e.target.value as any)}
-                    className="w-full h-14 px-6 text-lg font-light bg-white/10 border border-white/20 rounded-3xl backdrop-blur-sm text-white focus:border-emerald-400/50 shadow-xl"
-                  >
-                    <option value="free_trial">Free Trial</option>
-                    <option value="starter">Starter</option>
-                    <option value="pro">Pro</option>
-                    <option value="enterprise">Enterprise</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-lg font-light text-white/80">Subscription Status</label>
-                  <select
-                    value={tenantSubscriptionStatus}
-                    onChange={(e) => setTenantSubscriptionStatus(e.target.value as any)}
-                    className="w-full h-14 px-6 text-lg font-light bg-white/10 border border-white/20 rounded-3xl backdrop-blur-sm text-white focus:border-emerald-400/50 shadow-xl"
-                  >
-                    <option value="trialing">Trialing</option>
-                    <option value="active">Active</option>
-                    <option value="expired">Expired</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-              </div>
-              <Button
-                type="submit"
-                disabled={configureLoading}
-                className="w-full h-16 text-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-3xl shadow-2xl"
-              >
-                {configureLoading ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : <Upload className="w-6 h-6 mr-2" />}
-                {configureLoading ? 'Saving...' : 'Create/Update Tenant'}
-              </Button>
-            </form>
-            {configureMessage && <p className="mt-4 text-emerald-400 text-lg">{configureMessage}</p>}
-            {configureError && <p className="mt-4 text-red-400 text-lg">{configureError}</p>}
-          </motion.section>
-        )}
-
+      
         {/* Document Upload */}
         <motion.section 
           initial={{ opacity: 0, x: 20 }}

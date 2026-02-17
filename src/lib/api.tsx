@@ -175,13 +175,6 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 403) {
-      setAuthToken(null);
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-    }
-
     return Promise.reject(error);
   }
 );
