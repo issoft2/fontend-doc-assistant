@@ -62,10 +62,8 @@ export function useCollections({tenantId} : { tenantId?: string}) {
     try {
       setOrganizationsLoading(true);
 
-      const res = await fetchOrganizations(selectedTenantId);
-      const payload = Array.isArray(res) ? res : res?.data || [];
-
-      setorganizations(payload);
+      const data = await fetchOrganizations(selectedTenantId);
+      setorganizations(data);
 
     }catch(err) {
       console.error("Failed to fetch organizatinos", err);
