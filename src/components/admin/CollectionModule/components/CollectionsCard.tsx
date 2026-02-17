@@ -53,6 +53,7 @@ export const CollectionCard: React.FC<Props> = ({ collection, index, onAccessCli
 
         {/* Allowed Roles badges */}
         <div className="flex flex-wrap gap-2 mb-6">
+          Roles: 
           {collection.allowed_roles.length > 0 ? (
             collection.allowed_roles.map(role => (
               <span
@@ -65,6 +66,25 @@ export const CollectionCard: React.FC<Props> = ({ collection, index, onAccessCli
           ) : (
             <span className="px-2 py-1 text-xs text-white/50 bg-white/5 rounded-full">
               No roles
+            </span>
+          )}
+        </div>
+
+        {/* Allowed user badges */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          Users: 
+          {collection.allowed_user_ids.length > 0 ? (
+            collection.allowed_user_ids.map(user => (
+              <span
+                key={user}
+                className="px-2 py-1 text-xs text-white/80 bg-white/10 rounded-full"
+              >
+                {user}
+              </span>
+            ))
+          ) : (
+            <span className="px-2 py-1 text-xs text-white/50 bg-white/5 rounded-full">
+              Not Assigned
             </span>
           )}
         </div>
