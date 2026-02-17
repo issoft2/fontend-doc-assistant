@@ -137,12 +137,13 @@ const OrganizationsList: React.FC = () => {
             Organizations
           </h1>
         </div>
-        <p className="text-lg lg:text-xl text-white/60 font-light max-w-4xl mx-auto leading-relaxed">
-          {isVendor 
-            ? 'Manage organizations across all your tenants with precision control'
-            : `Managing organizations for: <span className="text-[#9b87f5] font-semibold">${tenantDisplayName}</span>`
-          }
-        </p>
+        {isVendor && (
+          <p className="text-lg lg:text-xl text-white/60 font-light max-w-4xl mx-auto leading-relaxed">
+            
+            Manage organizations across all your tenants with precision control
+        
+          </p>
+        )}
       </motion.div>
 
       {/* Create Form */}
