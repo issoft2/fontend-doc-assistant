@@ -5,6 +5,25 @@ import { listUsersForTenant, updateCollectionAccess } from '@/lib/api'
 import { CollectionOut } from '@/lib/api'
 import { ALL_ASSIGNABLE_ROLES, AssignableRole } from '@/lib/assignableRoles'
 
+
+export interface UserOut {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  tenant_id: string;
+  organization_id?: string | null;
+  role?: string | null;
+  phone?: string;
+  is_active: boolean;
+  created_at: string;
+  is_online?: boolean;
+  last_login_at?: string | null;
+  last_seen_at?: string | null;
+  roles?: string[];
+  permissions?: string[];
+}
+
 interface Props {
   open: boolean
   collection: CollectionOut | null
@@ -21,7 +40,7 @@ export const AccessControlModal: React.FC<Props> = ({
   const [roles, setRoles] = useState<AssignableRole[]>([])
   const [users, setUsers] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
-  const [availableUsers, setAvailableUsers] = useState<string[]>([])
+  const [availableUsers, setAvailableUsers] = useState<UserOut[]>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
 
   // Initialize state when modal opens
@@ -109,43 +128,30 @@ export const AccessControlModal: React.FC<Props> = ({
           </select>
         </div>
 
-        {/* Users Section */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-white/80 mb-2">
-            Allowed Users
-          </label>
-          <input
-            type="text"
-            placeholder="Add user email and press Enter"
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                const val = e.currentTarget.value.trim()
-                if (val && !users.includes(val)) {
-                  setUsers([...users, val])
-                  e.currentTarget.value = ''
-                }
-              }
-            }}
-            className="w-full p-3 bg-slate-800/50 text-white rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-          />
-          <div className="flex flex-wrap gap-2">
-            {users.map(u => (
-              <span
-                key={u}
-                className="bg-blue-500/20 text-blue-200 px-3 py-1 rounded-full flex items-center gap-2"
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {availableUsers.map(user => {
+            const selected = users.includes(user.id)
+            return (
+              <div
+                key={user.id}
+                onClick={() => {
+                  if (selected) {
+                    setUsers(users.filter(u => u !== user.id))
+                  } else {
+                    setUsers([...users, user.id])
+                  }
+                }}
+                className={`p-3 rounded-xl border cursor-pointer transition
+                  ${selected
+                    ? "bg-blue-500/20 border-blue-400"
+                    : "bg-white/5 border-white/10 hover:bg-white/10"
+                  }`}
               >
-                {u}
-                <button
-                  type="button"
-                  onClick={() => setUsers(users.filter(x => x !== u))}
-                  className="text-white/70 hover:text-white"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
+                <div className="text-sm font-medium">{user.email}</div>
+                <div className="text-xs text-white/50">{user.role}</div>
+              </div>
+            )
+          })}
         </div>
 
         {/* Footer Buttons */}
