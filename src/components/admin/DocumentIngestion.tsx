@@ -1,5 +1,5 @@
 // src/pages/admin/DocumentIngestion.tsx - COMPLETE INGESTION
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, use } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import {
   disconnectGoogleDriveApi,
   listCollectionsForOrg,
 } from '@/lib/api';
+import { useAuthStore } from '@/useAuthStore';
 
 interface DriveFileOut {
   id: string;
@@ -44,10 +45,19 @@ const DocumentIngestion: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Auth/Permissions
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [currentTenantId, setCurrentTenantId] = useState<string>('');
+  const {user} = useAuthStore();
+
+  const currentUser = user ?? null;
+  const currentTenantId = currentUser?.tenant_id ?? null;
+  const permissions = currentUser?.permissions ?? [];
+
+
+  const hasPermission = (p: string) => permissions.includes(p);
+
+
   const isVendor = currentUser?.role === 'vendor';
-  const canUpload = currentUser?.permissions?.includes('DOC:UPLOAD') || false;
+
+  const canUpload = hasPermission('DOC:UPLOAD');
 
   // Tenant Config (Vendor only)
   const [tenantId, setTenantId] = useState('');
@@ -339,7 +349,7 @@ const DocumentIngestion: React.FC = () => {
           </motion.button>
           <div>
             <h1 className="text-4xl lg:text-5xl font-light bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
-              Data Ingestion
+              D Ingestion
             </h1>
             <p className="text-xl text-white/60 mt-2">Upload files and connect Google Drive</p>
           </div>
