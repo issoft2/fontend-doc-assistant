@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { updateCollectionAccess } from '@/lib/api'
+import { listUsersForTenant, updateCollectionAccess } from '@/lib/api'
 import { CollectionOut } from '@/lib/api'
 import { ALL_ASSIGNABLE_ROLES, AssignableRole } from '@/lib/assignableRoles'
 
@@ -21,6 +21,8 @@ export const AccessControlModal: React.FC<Props> = ({
   const [roles, setRoles] = useState<AssignableRole[]>([])
   const [users, setUsers] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [availableUsers, setAvailableUsers] = useState<string[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
 
   // Initialize state when modal opens
   useEffect(() => {
@@ -31,6 +33,21 @@ export const AccessControlModal: React.FC<Props> = ({
       )
     )
     setUsers(collection.allowed_user_ids ?? [])
+    const loadUsers = async () => {
+      try{
+        setLoadingUsers(true)
+        const res = await listUsersForTenant() // handling the tenant param in the backend
+        const payload = Array.isArray(res) ? res : res?.data || []
+        setAvailableUsers(payload);
+      } catch (err) {
+        console.error("Failed to load Tenant user", err);
+        setAvailableUsers([]);
+      } finally {
+        setLoadingUsers(false)
+      }
+       
+    }
+    loadUsers()
   }, [collection])
 
   if (!open || !collection) return null
