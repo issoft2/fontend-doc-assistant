@@ -12,6 +12,7 @@ import { AccessControlModal } from "./components/AccessControlModal";
 
 import { useCollections } from "./hooks/useCollections";
 
+
 const CollectionList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -80,7 +81,7 @@ const CollectionList: React.FC = () => {
       <CreateCollectionModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        organizations={[]}
+        organizations={state.organizations}
         onCreated={actions.refresh}
         />
 

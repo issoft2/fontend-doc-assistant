@@ -1,10 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../../useAuthStore';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { 
   fetchOrganizations, 
   createOrganizationForTenant,
