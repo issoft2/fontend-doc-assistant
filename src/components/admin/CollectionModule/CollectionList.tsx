@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/useAuthStore";
 import { AuthRequired } from "@/components/AuthRequired";
@@ -7,10 +7,11 @@ import { CollectionsGrid } from "./components/CollectionsGrid";
 import { CollectionHeader } from "./components/CollectionsHeader";
 import { CreateCollectionModal } from "./components/CreateCollectionModal";
 import { TenantSelector } from "@/components/TenantSelector";
-import { AccessControlModal } from "./components/AccessControlModal";
+import { AccessControlModal, UserOut } from "./components/AccessControlModal";
 
 
 import { useCollections } from "./hooks/useCollections";
+import { listOrgTenantUsers } from "@/lib/api";
 
 
 const CollectionList: React.FC = () => {
@@ -28,7 +29,11 @@ const CollectionList: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
   const [currentCollection, setCurrentCollection] = useState<any>(null);
+  const [users, setUsers] = useState<UserOut[]>([]);
 
+  useEffect(() => {
+     listOrgTenantUsers().then(res => setUsers(res.data));
+  }, []);
     if (!user) return <AuthRequired />;
 
 
@@ -68,6 +73,7 @@ const CollectionList: React.FC = () => {
         {/* Collection grid */}
       <CollectionsGrid
         collections={state.filteredCollections}
+        users={users}
         loading={state.loading}
         onAccessClick={(c) => {
           setCurrentCollection(c)
