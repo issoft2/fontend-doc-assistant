@@ -314,7 +314,7 @@ const DocumentIngestion: React.FC = () => {
           </motion.button>
           <div>
             <h1 className="text-4xl lg:text-5xl font-light bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
-              D Ingestion
+              Data Ingestion
             </h1>
             <p className="text-xl text-white/60 mt-2">Upload files and connect Google Drive</p>
           </div>
@@ -351,7 +351,7 @@ const DocumentIngestion: React.FC = () => {
                 value={activeCollectionName}
                 onChange={(e) => setActiveCollectionName(e.target.value)}
                 disabled={!collections.length || !canUpload}
-                className="w-full h-14 px-6 text-lg font-light bg-white/10 border border-white/20 rounded-3xl backdrop-blur-sm text-white focus:border-emerald-400/50 shadow-xl"
+                className="w-full h-14 px-6 pr-12 text-lg font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-3xl backdrop-blur-xl text-white placeholder-white/40 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 shadow-2xl appearance-none transition-all"
                 required
               >
                 <option value="">Select collection</option>
