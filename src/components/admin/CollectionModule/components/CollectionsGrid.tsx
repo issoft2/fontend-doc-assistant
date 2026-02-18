@@ -1,11 +1,13 @@
-import { CollectionOut } from "@/lib/api";
+import { CollectionOut, listUsersForTenant } from "@/lib/api";
 import { Database, Plus } from "lucide-react";
 import React, { useState } from "react";
 import { CollectionCard } from "./CollectionsCard";
 import { motion } from "framer-motion";
+import { UserOut } from "./AccessControlModal";
 
 interface Props {
   collections: CollectionOut[];
+  users: UserOut[];
   loading?: boolean;
   onAccessClick: (collection: CollectionOut) => void;
   onCreateClick: () => void;
@@ -14,12 +16,19 @@ interface Props {
 
 export const CollectionsGrid: React.FC<Props> = ({
   collections,
+  users,
   loading = false,
   onAccessClick,
   onCreateClick,
   canCreate = false,
 }) => {
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
+
+  const userMap = React.useMemo(() => {
+    const map = new Map<string, UserOut>();
+    users.forEach(u => map.set(u.id, u));
+    return map;
+  }, [users]);
 
   if (loading) {
     return (
@@ -56,6 +65,7 @@ export const CollectionsGrid: React.FC<Props> = ({
           key={collection.id}
           collection={collection}
           index={index}
+          userMap={userMap}
           onAccessClick={(col) => {
             setActiveCollectionId(col.id);
             onAccessClick(col);

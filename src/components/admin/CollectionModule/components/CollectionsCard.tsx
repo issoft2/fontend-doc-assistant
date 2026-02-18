@@ -3,10 +3,12 @@ import { CollectionOut } from "@/lib/api";
 import { motion } from "framer-motion";
 import { Database, Eye, User, Shield, Users } from "lucide-react";
 import React from "react";
+import { UserOut } from "./AccessControlModal";
 
 interface Props {
   collection: CollectionOut;
   index: number;
+  userMap: Map<string, UserOut>;
   onAccessClick: (collection: CollectionOut) => void;
 }
 
@@ -24,7 +26,7 @@ const getVisibilityIcon = (visibility: string) => {
   }
 };
 
-export const CollectionCard: React.FC<Props> = ({ collection, index, onAccessClick }) => {
+export const CollectionCard: React.FC<Props> = ({ collection, index, userMap, onAccessClick }) => {
   return (
     <motion.div
       key={collection.id}
@@ -74,14 +76,18 @@ export const CollectionCard: React.FC<Props> = ({ collection, index, onAccessCli
         <div className="flex flex-wrap gap-2 mb-6">
           Users: 
           {collection.allowed_user_ids.length > 0 ? (
-            collection.allowed_user_ids.map(user => (
+            collection.allowed_user_ids.map(userId => {
+              const user = userMap.get(userId);
+
+              return (
               <span
-                key={user}
+                key={userId}
                 className="px-2 py-1 text-xs text-white/80 bg-white/10 rounded-full"
               >
-                {user}
+                {user?.email ?? "Unknown user"} 
               </span>
-            ))
+              );
+            })
           ) : (
             <span className="px-2 py-1 text-xs text-white/50 bg-white/5 rounded-full">
               Not Assigned
