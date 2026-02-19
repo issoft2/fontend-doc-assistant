@@ -46,7 +46,7 @@ export const CreateCollectionModal: React.FC<Props> = ({
         tenant_id: user.tenant_id,
         organization_id: organizationId,
         name,
-        visibility: 'tenant',
+        visibility: 'org',
         allowed_roles: [],
         allowed_user_ids: [],
       })
