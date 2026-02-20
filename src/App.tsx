@@ -4,7 +4,7 @@ import FeatureCards from "./components/FeatureCards";
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Login from "./pages/login";
 import { setNavigator } from "./lib/navigation";
-import ChatPage from "./pages/chat_page";
+import ChatPage from "./pages/ChatPage";
 import AdminLayout from "./layouts/AdminLayout"; // ✅ NEW
 import NotFound from "./pages/notFound";
 import TenantConfigForm from "./components/admin/TenantConfigurationForm";
