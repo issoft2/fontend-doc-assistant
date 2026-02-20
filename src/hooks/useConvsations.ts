@@ -32,7 +32,7 @@ export function useConversations() {
                 const res = await getConversation(convId);
                 const history = res.data?.messages || [];
                 onMessages(
-                    history.map(([role, content, meta]: [string, string, any]. index: number) => ({
+                    history.map(([role, content, meta]: [string, string, any], index: number) => ({
                         id: meta?.id ?? `${convId}-${index}`,
                         role: role as 'user' | 'assistant',
                         text: content,
