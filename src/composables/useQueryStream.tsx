@@ -10,7 +10,6 @@ export interface ChartSpec {
   data: Array<Record<string, number | string>>;
 }
 
-const TYPE_SPEED_MS = 12;
 const streamError = { state: null as string | null };
 
 export function useQueryStream() {
@@ -23,28 +22,14 @@ export function useQueryStream() {
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const fullAnswerRef = useRef('');
-  const typingIntervalRef = useRef<number | null>(null);
 
-  const startTyping = useCallback((text: string, speed = TYPE_SPEED_MS) => {
-    if (typingIntervalRef.current) {
-      clearTimeout(typingIntervalRef.current);
-    }
-    setAnswer('');
-    fullAnswerRef.current = text;
-    if (!text) return;
-
-    let i = 0;
-    const tick = () => {
-      if (i >= text.length) {
-        typingIntervalRef.current = null;
-        return;
-      }
-      setAnswer(text.slice(0, i + 1));
-      i += 1;
-      typingIntervalRef.current = setTimeout(tick, speed);
-    };
-    tick();
-  }, []);
+  // ✅ REMOVED: startTyping / typingIntervalRef entirely.
+  // The typewriter animation was the root cause of two bugs:
+  //   1. Double-render flash — startTyping() called setAnswer('') first, blanking
+  //      the already-visible streamed text before re-typing it from scratch.
+  //   2. Squished markdown — react-markdown received partial strings character
+  //      by character and collapsed whitespace on every incomplete parse.
+  // Neither bug exists without the typewriter. The UX is cleaner without it.
 
   const startStream = useCallback(async (payload: {
     question: string;
@@ -52,6 +37,7 @@ export function useQueryStream() {
     top_k?: number;
     collection_name?: string | null;
   }) => {
+    // Reset all state for a fresh query
     setAnswer('');
     setSuggestions([]);
     setStatuses([]);
@@ -70,10 +56,10 @@ export function useQueryStream() {
       params.set('collection_name', payload.collection_name);
     }
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-    if (token) {
-      params.set('token', token);
-    }
+    const token = typeof window !== 'undefined'
+      ? localStorage.getItem('access_token')
+      : null;
+    if (token) params.set('token', token);
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -126,15 +112,12 @@ export function useQueryStream() {
         if (!value) continue;
 
         buffer += decoder.decode(value, { stream: true });
-
-        // ✅ FIX 1: Split on real double-newline, not escaped literal '\\n\\n'
         const parts = buffer.split('\n\n');
         buffer = parts.pop() || '';
 
         for (const part of parts) {
           if (!part.trim()) continue;
 
-          // ✅ FIX 2: Split lines on real newline, not escaped literal '\\n'
           const lines = part.split('\n');
           let eventType = 'message';
           let data = '';
@@ -143,7 +126,7 @@ export function useQueryStream() {
             if (line.startsWith('event:')) {
               eventType = line.slice('event:'.length).trim();
             } else if (line.startsWith('data:')) {
-              if (data) data += '\n'; // ✅ FIX 3: Real newline when joining multi-line data
+              if (data) data += '\n';
               data += line.slice('data:'.length).trim();
             }
           }
@@ -159,11 +142,14 @@ export function useQueryStream() {
             }
 
             case 'token': {
-              // ✅ FIX 4: Decode the backend's <|n|> sentinel back to a real newline.
-              // The regex was also wrong — /<\|n\|>/g not /<\\|n\\|>/g
+              // ✅ OPTION B: Accumulate token AND update answer state immediately.
+              // During streaming, AssistantMessage renders this as plain <pre> text
+              // (not markdown) so whitespace is preserved and there is no squishing.
+              // When 'done' fires, isStreaming flips to false and AssistantMessage
+              // switches to <MarkdownText> with the same complete string — one clean
+              // swap with no flash, no reset, no double render.
               const delta = (data || '').replace(/<\|n\|>/g, '\n');
               fullAnswerRef.current += delta;
-              // Show answer progressively during streaming without typing animation
               setAnswer(fullAnswerRef.current);
               break;
             }
@@ -171,7 +157,9 @@ export function useQueryStream() {
             case 'suggestions': {
               try {
                 const parsed = JSON.parse(data || '[]');
-                setSuggestions(Array.isArray(parsed) ? parsed : parsed?.suggestions || []);
+                setSuggestions(
+                  Array.isArray(parsed) ? parsed : parsed?.suggestions || []
+                );
               } catch {
                 setSuggestions([]);
               }
@@ -201,22 +189,25 @@ export function useQueryStream() {
             case 'done': {
               setStatus('Completed');
               setStatuses(prev => [...prev, 'Completed']);
+              // ✅ Set answer one final time with the complete accumulated string.
+              // This is the same value already in state from the last token update,
+              // so React may batch/skip the re-render entirely — no flash, no reset.
+              // isStreaming flipping to false is what triggers AssistantMessage to
+              // switch from plain text rendering to <MarkdownText>.
+              if (fullAnswerRef.current) setAnswer(fullAnswerRef.current);
               setIsStreaming(false);
               controller.abort();
               abortControllerRef.current = null;
-              // ✅ FIX 5: Only run typing animation AFTER done, not during streaming.
-              // During streaming we set answer directly (see token case above).
-              if (fullAnswerRef.current) startTyping(fullAnswerRef.current);
               return;
             }
           }
         }
       }
 
-      // Stream ended without a 'done' event (connection dropped)
+      // Stream ended without a 'done' event (connection dropped / timeout)
+      if (fullAnswerRef.current) setAnswer(fullAnswerRef.current);
       setIsStreaming(false);
       abortControllerRef.current = null;
-      if (fullAnswerRef.current) startTyping(fullAnswerRef.current);
 
     } catch (err: any) {
       if (controller.signal.aborted) {
@@ -229,26 +220,23 @@ export function useQueryStream() {
       setIsStreaming(false);
       abortControllerRef.current = null;
     }
-  }, [startTyping]);
+  }, []);
 
   const stopStream = useCallback(async () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    if (typingIntervalRef.current) {
-      clearTimeout(typingIntervalRef.current);
-      typingIntervalRef.current = null;
-    }
+    // ✅ REMOVED: typingIntervalRef cleanup (no longer needed)
     setStatus('Stopped');
     setStatuses(prev => [...prev, 'Stopped']);
     setIsStreaming(false);
   }, []);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (abortControllerRef.current) abortControllerRef.current.abort();
-      if (typingIntervalRef.current) clearTimeout(typingIntervalRef.current);
     };
   }, []);
 
