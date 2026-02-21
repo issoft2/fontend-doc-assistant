@@ -1,6 +1,4 @@
-
 import { useState, useRef, useCallback, useEffect } from 'react';
-
 
 export interface ChartSpec {
   chart_type: 'line' | 'bar' | 'area';
@@ -16,7 +14,6 @@ const TYPE_SPEED_MS = 12;
 const streamError = { state: null as string | null };
 
 export function useQueryStream() {
-  // State
   const [answer, setAnswer] = useState('');
   const [statuses, setStatuses] = useState<string[]>([]);
   const [status, setStatus] = useState('');
@@ -24,20 +21,16 @@ export function useQueryStream() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [chartSpec, setChartSpec] = useState<ChartSpec[] | null>(null);
 
-  // Refs
   const abortControllerRef = useRef<AbortController | null>(null);
   const fullAnswerRef = useRef('');
   const typingIntervalRef = useRef<number | null>(null);
 
-  // Typing animation
   const startTyping = useCallback((text: string, speed = TYPE_SPEED_MS) => {
     if (typingIntervalRef.current) {
       clearTimeout(typingIntervalRef.current);
     }
-    
     setAnswer('');
     fullAnswerRef.current = text;
-    
     if (!text) return;
 
     let i = 0;
@@ -53,7 +46,6 @@ export function useQueryStream() {
     tick();
   }, []);
 
-  // Main streaming function
   const startStream = useCallback(async (payload: {
     question: string;
     conversation_id: string;
@@ -98,7 +90,6 @@ export function useQueryStream() {
         signal: controller.signal,
       });
 
-      // ✅ FIX 1: Handle 401 without logout (parent handles it)
       if (response.status === 401) {
         setStatus('Authentication failed');
         setIsStreaming(false);
@@ -135,11 +126,16 @@ export function useQueryStream() {
         if (!value) continue;
 
         buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split('\\n\\n');
+
+        // ✅ FIX 1: Split on real double-newline, not escaped literal '\\n\\n'
+        const parts = buffer.split('\n\n');
         buffer = parts.pop() || '';
 
         for (const part of parts) {
-          const lines = part.split('\\n');
+          if (!part.trim()) continue;
+
+          // ✅ FIX 2: Split lines on real newline, not escaped literal '\\n'
+          const lines = part.split('\n');
           let eventType = 'message';
           let data = '';
 
@@ -147,24 +143,32 @@ export function useQueryStream() {
             if (line.startsWith('event:')) {
               eventType = line.slice('event:'.length).trim();
             } else if (line.startsWith('data:')) {
-              if (data) data += '\\n';
+              if (data) data += '\n'; // ✅ FIX 3: Real newline when joining multi-line data
               data += line.slice('data:'.length).trim();
             }
           }
 
+          if (!data && eventType === 'message') continue;
+
           switch (eventType) {
-            case 'status':
+            case 'status': {
               const msg = data || '';
               setStatus(msg);
               if (msg) setStatuses(prev => [...prev, msg]);
               break;
+            }
 
-            case 'token':
-              const delta = (data || '').replace(/<\\|n\\|>/g, '\\n');
+            case 'token': {
+              // ✅ FIX 4: Decode the backend's <|n|> sentinel back to a real newline.
+              // The regex was also wrong — /<\|n\|>/g not /<\\|n\\|>/g
+              const delta = (data || '').replace(/<\|n\|>/g, '\n');
               fullAnswerRef.current += delta;
+              // Show answer progressively during streaming without typing animation
+              setAnswer(fullAnswerRef.current);
               break;
+            }
 
-            case 'suggestions':
+            case 'suggestions': {
               try {
                 const parsed = JSON.parse(data || '[]');
                 setSuggestions(Array.isArray(parsed) ? parsed : parsed?.suggestions || []);
@@ -172,12 +176,12 @@ export function useQueryStream() {
                 setSuggestions([]);
               }
               break;
+            }
 
-            case 'chart':
+            case 'chart': {
               try {
                 const parsed = JSON.parse(data || '{}');
                 let charts: ChartSpec[] = [];
-                
                 if (Array.isArray(parsed)) {
                   charts = parsed;
                 } else if (parsed?.charts) {
@@ -187,28 +191,33 @@ export function useQueryStream() {
                 } else if (parsed) {
                   charts = [parsed as ChartSpec];
                 }
-                
                 setChartSpec(charts.length ? charts : null);
               } catch {
                 setChartSpec(null);
               }
               break;
+            }
 
-            case 'done':
+            case 'done': {
               setStatus('Completed');
               setStatuses(prev => [...prev, 'Completed']);
               setIsStreaming(false);
               controller.abort();
               abortControllerRef.current = null;
+              // ✅ FIX 5: Only run typing animation AFTER done, not during streaming.
+              // During streaming we set answer directly (see token case above).
               if (fullAnswerRef.current) startTyping(fullAnswerRef.current);
               return;
+            }
           }
         }
       }
 
+      // Stream ended without a 'done' event (connection dropped)
       setIsStreaming(false);
       abortControllerRef.current = null;
       if (fullAnswerRef.current) startTyping(fullAnswerRef.current);
+
     } catch (err: any) {
       if (controller.signal.aborted) {
         setStatus('Stopped');
@@ -222,7 +231,7 @@ export function useQueryStream() {
     }
   }, [startTyping]);
 
-  const stopStream = useCallback(() => {
+  const stopStream = useCallback(async () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
