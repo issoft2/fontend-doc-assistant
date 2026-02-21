@@ -4,7 +4,8 @@ WORKDIR /app
 
 # Leverage Docker cache by copying package files first
 COPY package*.json ./
-RUN npm ci
+
+RUN npm install --legacy-peer-deps
 
 # Copy the rest of the source code
 COPY . .
