@@ -186,14 +186,24 @@ export function useQueryStream() {
               break;
             }
 
+            case 'correction': {
+              // The formatter has produced a cleaned version of the answer.
+              // Replace the raw streamed tokens with this formatted string.
+              // This is what fixes the word-squishing: raw tokens stream fine,
+              // then the formatter's output cleanly replaces them before 'done'.
+              const corrected = (data || '').replace(/<\|n\|>/g, '\n');
+              fullAnswerRef.current = corrected;
+              setAnswer(corrected);
+              break;
+            }
+
             case 'done': {
               setStatus('Completed');
               setStatuses(prev => [...prev, 'Completed']);
-              // ✅ Set answer one final time with the complete accumulated string.
-              // This is the same value already in state from the last token update,
-              // so React may batch/skip the re-render entirely — no flash, no reset.
-              // isStreaming flipping to false is what triggers AssistantMessage to
-              // switch from plain text rendering to <MarkdownText>.
+              // Final answer — fullAnswerRef.current holds either the last
+              // correction or the raw streamed tokens if no correction came.
+              // isStreaming flipping false triggers AssistantMessage to switch
+              // from plain <p> to <MarkdownText> for proper markdown rendering.
               if (fullAnswerRef.current) setAnswer(fullAnswerRef.current);
               setIsStreaming(false);
               controller.abort();
