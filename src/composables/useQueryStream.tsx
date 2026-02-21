@@ -127,7 +127,12 @@ export function useQueryStream() {
               eventType = line.slice('event:'.length).trim();
             } else if (line.startsWith('data:')) {
               if (data) data += '\n';
-              data += line.slice('data:'.length).trim();
+              // ✅ Use trimStart with limit — only strip the single space
+              // after 'data:' per SSE spec. Do NOT use .trim() here —
+              // it strips trailing spaces too, which destroys space-only
+              // tokens (OpenAI often sends ' ' as a standalone token).
+              const raw = line.slice('data:'.length);
+              data += raw.startsWith(' ') ? raw.slice(1) : raw;
             }
           }
 
