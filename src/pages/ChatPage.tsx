@@ -58,6 +58,7 @@ const ChatPage: React.FC = () => {
     chartSpec,
     startStream,
     stopStream,
+    resetAnswer,
   } = useQueryStream();
 
   // ─── Derived ──────────────────────────────────────────────────────────────
@@ -117,12 +118,14 @@ const ChatPage: React.FC = () => {
   const stopAll = useCallback(async () => {
     await stopStream();
     stopSpeaking();
+    resetAnswer();
   }, [stopStream, stopSpeaking]);
 
   const handleOpenConversation = useCallback(
     async (convId: string) => {
       await stopAll();
       setError('');
+      setMessages([]); 
       await openConversation(convId, setMessages, setError, () => {});
     },
     [stopAll, openConversation]
