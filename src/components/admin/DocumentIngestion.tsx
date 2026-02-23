@@ -76,7 +76,8 @@ const DocumentIngestion: React.FC = () => {
   const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   const [collectionsError, setCollectionsError] = useState('');
-  const [activeCollectionName, setActiveCollectionName] = useState('');
+  const [activeCollectionName, setActiveCollectionName] = useState('');      // upload section
+  const [driveCollectionName, setDriveCollectionName] = useState('');        // drive section
 
   // Upload
   const [docTitle, setDocTitle] = useState('');
@@ -305,7 +306,7 @@ const DocumentIngestion: React.FC = () => {
 
   // ── Ingest ───────────────────────────────────────────────────────────────────
   const ingestSelectedDriveFiles = async () => {
-    if (!canUpload || !currentTenantId || !activeCollectionName || selectedDriveFileIds.size === 0) {
+    if (!canUpload || !currentTenantId || !driveCollectionName || selectedDriveFileIds.size === 0) {
       setDriveError('Cannot ingest: missing permissions, tenant, collection, or no files selected.');
       return;
     }
@@ -323,7 +324,7 @@ const DocumentIngestion: React.FC = () => {
       try {
         await ingestDriveFile({
           fileId: fileObj.id,
-          collectionName: activeCollectionName,
+          collectionName: driveCollectionName,
           title: fileObj.name,
           tenant_id: currentTenantId,
         });
@@ -537,17 +538,42 @@ const DocumentIngestion: React.FC = () => {
         {/* Connected state */}
         {googleDriveStatus === 'connected' && (
           <div className="space-y-6">
-            {/* Status badge + collection info */}
-            <div className="flex flex-wrap items-center gap-4 text-lg">
+            {/* Status badge */}
+            <div className="flex flex-wrap items-center gap-4">
               <div className="px-4 py-2 rounded-2xl font-mono text-sm bg-emerald-500/20 border border-emerald-400/30 text-emerald-200">
                 Connected as {googleDriveEmail}
               </div>
-              <span className="text-white/60">
-                Collection:{' '}
-                <span className={cn('font-semibold', activeCollectionName ? 'text-emerald-400' : 'text-amber-400')}>
-                  {activeCollectionName || 'None selected — pick one above'}
-                </span>
-              </span>
+            </div>
+
+            {/* Drive owns its own collection selector so the ingest button
+                is never blocked by the upload form's collection state */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/70 block">
+                Target Collection <span className="text-emerald-400">*</span>
+                <span className="ml-2 text-white/40 font-normal">— files will be ingested into this collection</span>
+              </label>
+              {collectionsLoading ? (
+                <div className="flex items-center gap-3 h-12 px-5 bg-white/5 border border-white/10 rounded-2xl text-white/40 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Loading collections...
+                </div>
+              ) : (
+                <select
+                  value={driveCollectionName}
+                  onChange={e => setDriveCollectionName(e.target.value)}
+                  disabled={!collections.length}
+                  className="w-full h-12 px-5 text-base font-light bg-gradient-to-r from-slate-800/90 to-slate-900/90 border border-white/20 rounded-2xl text-white focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-400/20 appearance-none transition-all"
+                >
+                  <option value="">Select collection</option>
+                  {collections.map(col => (
+                    <option key={col.id} value={col.name}>{col.name}</option>
+                  ))}
+                </select>
+              )}
+              {!driveCollectionName && !collectionsLoading && (
+                <p className="text-amber-400/80 text-xs flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> Select a collection before ingesting
+                </p>
+              )}
             </div>
 
             {/* Action buttons */}
@@ -564,11 +590,24 @@ const DocumentIngestion: React.FC = () => {
               {driveFiles.length > 0 && (
                 <Button
                   onClick={ingestSelectedDriveFiles}
-                  disabled={ingesting || selectedDriveFileIds.size === 0 || !canUpload || !activeCollectionName}
-                  className="h-14 px-8 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-3xl shadow-xl disabled:opacity-50"
+                  disabled={ingesting || selectedDriveFileIds.size === 0 || !canUpload || !driveCollectionName}
+                  className={cn(
+                    "h-14 px-8 rounded-3xl shadow-xl transition-all duration-200",
+                    // FIX: Strong disabled style so button clearly looks inactive
+                    // when no files are selected. opacity-50 alone was too subtle
+                    // on a dark gradient and made it look clickable when it wasn't.
+                    selectedDriveFileIds.size === 0 || !driveCollectionName || !canUpload || ingesting
+                      ? "bg-white/10 border border-white/10 text-white/30 cursor-not-allowed"
+                      : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white"
+                  )}
                 >
-                  {ingesting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Upload className="w-5 h-5 mr-2" />}
-                  {ingesting ? 'Ingesting...' : `Ingest ${selectedDriveFileIds.size} File${selectedDriveFileIds.size !== 1 ? 's' : ''}`}
+                  {ingesting
+                    ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Ingesting...</>
+                    : selectedDriveFileIds.size === 0
+                    // FIX: Show clear prompt when nothing selected instead of "Ingest 0 Files"
+                    ? <><Upload className="w-5 h-5 mr-2 opacity-40" /> Select files to ingest</>
+                    : <><Upload className="w-5 h-5 mr-2" /> Ingest {selectedDriveFileIds.size} File{selectedDriveFileIds.size !== 1 ? 's' : ''}</>
+                  }
                 </Button>
               )}
             </div>
