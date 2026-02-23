@@ -62,6 +62,7 @@ const App = () => {
         <Route path="collections" element={<CollectionList />} />
         <Route path="users" element={<UserList />} />
         <Route path="ingestion" element={<DocumentIngestion />} />
+        <Route path="ingest" element={<DocumentIngestion />} />
       </Route>
       
        <Route path="/docs" element={<DocsRedirect />} />
