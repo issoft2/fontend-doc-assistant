@@ -294,9 +294,13 @@ const DocumentIngestion: React.FC = () => {
     }
   };
 
-  // FIX: Attach indeterminate imperatively since React doesn't support it as a prop
-  const selectAllRef = useCallback((el: HTMLInputElement | null) => {
-    if (el) el.indeterminate = isIndeterminate;
+  // FIX: useCallback ref only fires on mount/unmount, NOT when isIndeterminate changes.
+  // Use a stable ref + useEffect instead so indeterminate updates on every render.
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = isIndeterminate;
+    }
   }, [isIndeterminate]);
 
   // ── Ingest ───────────────────────────────────────────────────────────────────
@@ -629,16 +633,14 @@ const DocumentIngestion: React.FC = () => {
                           'flex items-center justify-between px-4 py-3 transition-colors group',
                           driveFile.is_folder
                             ? 'hover:bg-amber-500/5 cursor-pointer'
-                            : isEligible && canUpload && !isRunning
-                            ? 'hover:bg-white/5 cursor-pointer'
-                            : 'opacity-50 cursor-not-allowed'
+                            : 'hover:bg-white/5'
                         )}
                         onClick={() => {
-                          if (driveFile.is_folder) {
-                            navigateIntoFolder(driveFile);
-                          } else if (isEligible && canUpload && !isRunning) {
-                            toggleDriveFileSelection(driveFile.id);
-                          }
+                          // FIX: Only folders navigate on row click.
+                          // File checkboxes handle their own onChange — if we ALSO
+                          // toggle here, one click fires both handlers and the state
+                          // cancels itself out, making checkboxes impossible to uncheck.
+                          if (driveFile.is_folder) navigateIntoFolder(driveFile);
                         }}
                       >
                         {/* Icon + name */}
