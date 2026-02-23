@@ -248,6 +248,22 @@ export function useQueryStream() {
     setIsStreaming(false);
   }, []);
 
+
+  // Reset the old state before starting one:
+
+  const resetAnswer = useCallback(() => {
+      setAnswer('');
+      setStatuses([]);
+      setStatus('')
+      setSuggestions([]);
+      setChartSpec(null);
+      fullAnswerRef.current = '';
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -264,6 +280,7 @@ export function useQueryStream() {
     chartSpec,
     startStream,
     stopStream,
+    resetAnswer,
     streamError: streamError.state,
   };
 }
