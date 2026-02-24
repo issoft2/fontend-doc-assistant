@@ -323,8 +323,8 @@ const DocumentIngestion: React.FC = () => {
       if (!fileObj) continue;
       try {
         await ingestDriveFile({
-          fileId: fileObj.id,
-          collectionName: driveCollectionName,
+          file_id: fileObj.id,
+          collection_name: driveCollectionName,
           title: fileObj.name,
           tenant_id: currentTenantId,
         });

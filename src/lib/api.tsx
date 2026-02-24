@@ -74,8 +74,8 @@ export interface ListDriveFilesParams {
 }
 
 export interface IngestDriveFilePayload {
-  fileId: string;
-  collectionName: string;
+  file_id: string;
+  collection_name: string;
   title: string;
   tenant_id: string;
 }
