@@ -326,7 +326,8 @@ const DocumentIngestion: React.FC = () => {
           file_id: fileObj.id,
           collection_name: driveCollectionName,
           title: fileObj.name,
-        });
+          tenant_id: currentTenantId,
+         });
         setIngestStatusById(prev => ({ ...prev, [id]: 'success' }));
         successCount++;
       } catch {

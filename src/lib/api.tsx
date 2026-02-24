@@ -77,7 +77,7 @@ export interface IngestDriveFilePayload {
   file_id: string;
   collection_name: string;
   title: string;
-  tenant_id?: string;
+  tenant_id: string;
 }
 
 export interface OrganizationOut {
