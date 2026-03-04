@@ -13,6 +13,7 @@ import OrganizationsList from "./components/admin/OrganizationsList"
 import CollectionList from "./components/admin/CollectionModule/CollectionList";
 import UserList from "./components/admin/UserList";
 import DocumentIngestion from "./components/admin/DocumentIngestion";
+import FirstLoginPage from "./pages/firstLoginPage";
 
 
   const DocsRedirect: React.FC = () => {
@@ -52,6 +53,7 @@ const App = () => {
       {/* Public routes */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/first-login" element={<FirstLoginPage />} />
       <Route path="/chat" element={<ChatPage />} />
 
       {/* ✅ NEW: Admin routes with layout */}
@@ -67,7 +69,6 @@ const App = () => {
       
        <Route path="/docs" element={<DocsRedirect />} />
        <Route path="/redoc" element={<ReDocRedirect />} />
-  
 
 
       {/* 404 */}
