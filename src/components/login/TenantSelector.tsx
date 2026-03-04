@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Building2, ChevronRight, ArrowLeft, Loader2 } from 'lucide-react';
-import { slideRight } from '@/components/login/login.types';
-import type { TenantOption } from '@/components/login/login.types';
+import { slideRight } from './login.types';
+import type { TenantOption } from './login.types';
 
 interface TenantSelectorProps {
   tenants: TenantOption[];
@@ -32,12 +32,12 @@ const TenantSelector = ({
     {/* Company cards */}
     <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
       {tenants.map((t, i) => {
-        const isSelected = selectedTenantId === t.tenant_id;
+        const isSelected = selectedTenantId === t.tenant_id.toString();
         return (
           <motion.button
             key={t.tenant_id}
             type="button"
-            onClick={() => onSelect(t.tenant_id)}
+            onClick={() => onSelect(t.tenant_id.toString())}
             className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 ${
               isSelected
                 ? 'border-indigo-500/70 bg-indigo-500/10 shadow-lg shadow-indigo-500/10'
