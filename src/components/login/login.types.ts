@@ -2,7 +2,7 @@ import type { Variants } from 'framer-motion';
 
 // ── Domain types ─────────────────────────────────────────────────────────────
 export interface TenantOption {
-  tenant_id: string;
+  tenant_id: number;
   name?: string | null;
   role?: string | null;
 }

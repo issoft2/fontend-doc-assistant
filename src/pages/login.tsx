@@ -9,6 +9,7 @@ import ErrorBanner      from '@/components/login/ErrorBanner';
 import { containerVariants, itemVariants } from '@/components/login/login.types';
 import type { TenantOption, LoginResponse } from '@/components/login/login.types';
 
+
 // ── Step indicator ────────────────────────────────────────────────────────────
 function StepDots({ step }: { step: 1 | 2 }) {
   return (
@@ -54,17 +55,25 @@ const LoginPage = () => {
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Reset tenant state BEFORE the request, not mid-flight
+    setTenantOptions([]);
+    setSelectedTenantId('');
+    setStep(1);
     setLoading(true);
     setError('');
-    resetTenantSelection();
     try {
       const res = (await login({ email: email.trim(), password })) as LoginResponse;
       if (res?.requires_tenant_selection) {
         const tenants = res.tenants ?? [];
-        if (!tenants.length) { setError('No companies found for this account.'); return; }
+        if (!tenants.length) {
+          setError('No companies found for this account.');
+          return;
+        }
+        // Set tenants first, THEN switch step so the list is ready when step 2 renders
         setTenantOptions(tenants);
         setStep(2);
       }
+      // Single-tenant: login() handled token + redirect internally — do nothing here
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } }; message?: string };
       setError(e?.response?.data?.detail || e?.message || 'Login failed.');
@@ -79,6 +88,7 @@ const LoginPage = () => {
     setLoading(true);
     setError('');
     try {
+      // Cast to number — tenant_id comes back as number from the API
       await loginToTenant({ email: email.trim(), tenant_id: selectedTenantId });
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } }; message?: string };
